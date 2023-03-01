@@ -1,48 +1,50 @@
 {
   "name": "@snek-functions/origin",
-  "version": "0.0.29",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "baseURL": "https://services.snek.at/origin",
+  "version": "0.1.0",
   "type": "module",
-  "files": [
-    "dist"
-  ],
-  "description": "Generated with `snek-functions init`",
+  "description": "Generated with `sf new`",
   "author": "snek-at",
+  "exports": {
+    "./client": "./src/client/index.ts",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "./client": [
+        "./src/client/index.ts"
+      ]
+    }
+  },
+  "files": [
+    "src/client",
+    "package.json"
+  ],
   "config": {
     "commitizen": {
       "path": "git-cz"
     }
   },
   "dependencies": {
-    "@snek-at/functions": "*",
-    "@snek-functions/authentication": "*",
-    "@snek-functions/email": "*",
-    "@snek-functions/iam": "*",
-    "@snek-functions/registration": "*",
-    "@snek-functions/shopify": "*",
+    "@snek-at/function": "*",
+    "@snek-at/function-cli": "*",
+    "@snek-at/function-server": "*",
     "cors": "^2.8.5",
-    "pinkie-promise": "^2.0.1"
+    "jsonwebtoken": "^9.0.0",
+    "snek-query": "^0.0.55"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.12",
-    "@types/jsonwebtoken": "^8.5.9",
+    "@types/cors": "^2.8.13",
+    "@types/jsonwebtoken": "^9.0.1",
     "commitizen": "^4.2.5",
-    "git-cz": "^4.9.0",
-    "nodemon": "^2.0.19",
-    "serverless": "^3.19.0",
-    "serverless-offline": "^9.2.6",
-    "serverless-plugin-ifelse": "^1.0.7"
+    "git-cz": "^4.9.0"
   },
   "scripts": {
-    "build": "sf build -f . --declaration",
-    "start": "sf build -f . && IS_OFFLINE=true nodemon --watch dist --exec sls offline --httpPort 4010 --lambdaPort 4012",
-    "deploy": "sls deploy",
-    "postinstall": "sf install"
-  },
-  "sfDependencies": {
-    "jsonwebtoken": "^8.5.1",
-    "@types/express": "^4.17.13",
-    "@types/jsonwebtoken": "^8.5.9"
+    "develop": "yarn sf develop",
+    "build": "yarn sf build",
+    "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent",
+    "generate-clients:iam": "yarn snek-query generate https://services.snek.at/iam/graphql --output ./src/clients/iam",
+    "generate-clients:authentication": "yarn snek-query generate https://services.snek.at/authentication/graphql --output ./src/clients/authentication",
+    "generate-clients:jaenagent": "yarn snek-query generate https://services.snek.at/jaenagent/graphql --output ./src/clients/jaenagent"
   }
 }

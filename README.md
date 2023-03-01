@@ -1,4 +1,4 @@
-# origin
+# template
 
 This repository serves as an entry point for all future projects.
 
