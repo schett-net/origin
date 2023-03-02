@@ -1,11 +1,8 @@
-import { GraphQLError } from "graphql";
 import { Context } from "@snek-at/function";
+import { GraphQLError } from "graphql";
 
 import { sqIAM } from "../clients/iam";
 import { sqJaenAgent } from "../clients/jaenagent";
-import { isAuthenticatedOnResource } from "../decorators/auth";
-import AuthUtils from "../utils/AuthUtils";
-import { doNotConvertToString } from "snek-query";
 
 export class Resource {
   static async resource(id: string) {
@@ -31,43 +28,42 @@ export class Resource {
 
   static jaenPublish =
     () => async (resourceId: string, migrationURL: string) => {
-      console.log("pass auth");
       const r = await Resource.resource(resourceId);
-      console.log("r", r);
-
       const config = await r.config();
 
       console.log("config", config);
 
       if (!config.jaen) {
-        throw new GraphQLError("No `jaen` config found in resource config");
+        throw new GraphQLError(
+          "When publishing to jaen, you need to provide a `jaen` config"
+        );
       }
 
-      const jaenGitHubAccessToken = (await r.secret("JAEN_GITHUB_ACCESS_TOKEN"))
+      const githubAccessToken = (await r.secret("JAEN_GITHUB_ACCESS_TOKEN"))
         .value;
 
-      const jaenGitHubRemote = config.jaen.githubRemote;
-      const jaenGitHubCwd = config.jaen.githubCwd;
+      const repository = config.jaen.repository;
+      const repositoryCwd = config.jaen.repositoryCwd;
 
-      if (!jaenGitHubRemote) {
+      if (!repository) {
         throw new GraphQLError("No `githubRemote` config found");
       }
 
-      if (!jaenGitHubAccessToken) {
+      if (!githubAccessToken) {
         throw new GraphQLError("No `JAEN_GITHUB_ACCESS_TOKEN` secret found");
       }
 
       const publishConfig: {
-        jaenGitHubRemote: string;
-        jaenGitHubCwd?: string;
-        jaenGitHubAccessToken: string;
+        repository: string;
+        repositoryCwd?: string;
+        githubAccessToken: string;
       } = {
-        jaenGitHubRemote,
-        jaenGitHubAccessToken,
+        repository,
+        githubAccessToken,
       };
 
-      if (jaenGitHubCwd) {
-        publishConfig.jaenGitHubCwd = jaenGitHubCwd;
+      if (repositoryCwd) {
+        publishConfig.repositoryCwd = repositoryCwd;
       }
 
       const [_, errors] = await sqJaenAgent.mutate((Mutation) => {
@@ -92,7 +88,17 @@ export class Resource {
     this.name = name;
   }
 
-  async config(): Promise<Record<string, any>> {
+  async config(): Promise<{
+    jaen?: {
+      repository: string;
+      repositoryCwd?: string;
+    };
+    access?: {
+      baseURL: string;
+      signInURL?: string;
+      signOutURL?: string;
+    };
+  }> {
     const [config, errors] = await sqIAM.query((Query) => {
       const c = Query.resource({ id: this.id }).config;
 
