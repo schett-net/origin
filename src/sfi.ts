@@ -6,43 +6,25 @@ import { sqJaenAgent } from "./clients/jaenagent";
 
 import { Resource } from "./controller/Resource";
 import { User } from "./controller/User";
-import { isAuthenticated } from "./decorators/auth";
+import { isAuthenticated, isAuthenticatedOnResource } from "./decorators/auth";
 
 export default defineService(
   {
     Query: {
       me: withContext(User.me),
-      resource: Resource.resource,
     },
     Mutation: {
       signIn: withContext(User.signIn),
       signOut: withContext(User.signOut),
-      resourceSignIn: withContext(Resource.resourceSignIn),
-      jaenPublish: withContext(
-        () => async (resourceId: string, migrationURL: string) => {
-          const r = await Resource.resource(resourceId);
-
-          const [res, errors] = await sqJaenAgent.mutate((Mutation) => {
-            return Mutation.publish({
-              migrationURL,
-              config: {
-                jaenGitHubRemote: "",
-                jaenGitHubCwd: "",
-                jaenGitHubAccessToken: "",
-              },
-            });
-          });
-
-          if (errors) {
-            throw new GraphQLError(errors[0].message);
-          }
-
-          return res;
-        },
-        {
-          decorators: [isAuthenticated],
-        }
-      ),
+      refresh: withContext(User.refresh),
+      resourceSignIn: withContext(Resource.resourceSignIn, {
+        decorators: [
+          isAuthenticatedOnResource("7f2734cf-9283-4568-94d1-8903354ca382"),
+        ],
+      }),
+      jaenPublish: withContext(Resource.jaenPublish, {
+        decorators: [isAuthenticated],
+      }),
     },
   },
   {
@@ -55,15 +37,9 @@ export default defineService(
       });
 
       app.get("/auth", (req, res) => {
-        // set cookie and redirect to frontend
-        res.cookie("token", "1234512345123451235", {
-          httpOnly: true,
-          secure: true,
-          sameSite: "lax",
-        });
+        res.setHeader("Authorization", ["1", "2"]);
 
-        // redirect to origin
-        res.redirect("https://snek.at");
+        res.send("Hello World!");
       });
 
       return app;

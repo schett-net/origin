@@ -5,12 +5,24 @@ type FilterInput = {
   isActive?: t.Boolean;
   isAdmin?: t.Boolean;
 };
+type SecretInput = {
+  scopeId: t.String;
+  name: t.String;
+  value: t.NotSupportedYet;
+  expiresAt?: t.String;
+};
+type GenericObjectInput = {
+  object: t.NotSupportedYet;
+  expiresAt?: t.String;
+  scopeId?: t.String;
+  tag?: t.String;
+};
 
 export class Query {
   __typename: t.String;
   user: (args: { id: t.String }) => User;
   users: (args?: { filter?: FilterInput }) => User[];
-  username: (args: { id: t.String }) => Username;
+  username: (args: { id: t.String }) => t.Nullable<Username>;
   usernames: Username[];
   account: (args: { id: t.String }) => t.Nullable<Account>;
   accounts: Account[];
@@ -22,12 +34,16 @@ export class Query {
   logins: (args: { resourceId: t.String }) => Login[];
   snekId: (args: { id: t.String }) => t.Nullable<SnekId>;
   snekIds: SnekId[];
-  genericObject: (args: { id: t.String }) => GenericObject;
-  genericObjects: GenericObject[];
+  genericObject: (args: { id: t.String; scopeId: t.String }) => GenericObject;
+  genericObjects: (args: {
+    scopeId: t.String;
+    tag?: t.String;
+  }) => GenericObject[];
   aliasCheckAvailability: (args: {
     login: t.String;
     resourceId: t.String;
   }) => t.Boolean;
+  version: t.String;
   constructor() {
     this.__typename = "";
     this.user = fnProxy(User);
@@ -45,8 +61,9 @@ export class Query {
     this.snekId = fnProxy(SnekId);
     this.snekIds = arrayProxy(SnekId);
     this.genericObject = fnProxy(GenericObject);
-    this.genericObjects = arrayProxy(GenericObject);
+    this.genericObjects = fnArrayProxy(GenericObject);
     this.aliasCheckAvailability = () => false;
+    this.version = "";
   }
 }
 export class User {
@@ -55,6 +72,7 @@ export class User {
   id: t.String;
   resourceId: t.String;
   accountId: t.String;
+  isAdmin: t.Boolean;
   emails: Email[];
   username: t.Nullable<Username>;
   account: t.Nullable<Account>;
@@ -66,6 +84,7 @@ export class User {
     this.id = "";
     this.resourceId = "";
     this.accountId = "";
+    this.isAdmin = false;
     this.emails = arrayProxy(Email);
     this.username = proxy(Username);
     this.account = proxy(Account);
@@ -130,6 +149,9 @@ export class Resource {
   accountId: t.String;
   users: User[];
   account: t.Nullable<Account>;
+  config: GenericObject;
+  secrets: SecretObject[];
+  secret: (args: { name: t.String }) => SecretObject;
   snekId: t.Nullable<SnekId>;
   constructor() {
     this.__typename = "";
@@ -138,6 +160,9 @@ export class Resource {
     this.accountId = "";
     this.users = arrayProxy(User);
     this.account = proxy(Account);
+    this.config = proxy(GenericObject);
+    this.secrets = arrayProxy(SecretObject);
+    this.secret = fnProxy(SecretObject);
     this.snekId = proxy(SnekId);
   }
 }
@@ -159,6 +184,36 @@ export class Account {
     this.snekId = proxy(SnekId);
   }
 }
+export class GenericObject {
+  __typename: t.String;
+  id: t.String;
+  value: t.NotSupportedYet;
+  tag: t.Nullable<t.String>;
+  expiresAt: t.Nullable<t.String>;
+  snekId: t.Nullable<SnekId>;
+  constructor() {
+    this.__typename = "";
+    this.id = "";
+    this.value = null;
+    this.tag = null;
+    this.expiresAt = null;
+    this.snekId = proxy(SnekId);
+  }
+}
+export class SecretObject {
+  __typename: t.String;
+  name: t.String;
+  value: t.NotSupportedYet;
+  expiresAt: t.Nullable<t.String>;
+  snekId: t.Nullable<SnekId>;
+  constructor() {
+    this.__typename = "";
+    this.name = "";
+    this.value = null;
+    this.expiresAt = null;
+    this.snekId = proxy(SnekId);
+  }
+}
 export class Username {
   __typename: t.String;
   id: t.String;
@@ -173,18 +228,6 @@ export class Username {
     this.userId = null;
     this.snekId = proxy(SnekId);
     this.user = proxy(User);
-  }
-}
-export class GenericObject {
-  __typename: t.String;
-  id: t.String;
-  value: t.NotSupportedYet;
-  snekId: t.Nullable<SnekId>;
-  constructor() {
-    this.__typename = "";
-    this.id = "";
-    this.value = null;
-    this.snekId = proxy(SnekId);
   }
 }
 export class Login {
@@ -209,9 +252,15 @@ export class Mutation {
     accountId?: t.String;
     isActive: t.Boolean;
   }) => User;
+  createSecret: (args: { secret: SecretInput }) => SecretObject;
+  genericObjectCreate: (args: {
+    genericObject: GenericObjectInput;
+  }) => GenericObject;
   constructor() {
     this.__typename = "";
     this.inputArray = () => "";
     this.userCreate = fnProxy(User);
+    this.createSecret = fnProxy(SecretObject);
+    this.genericObjectCreate = fnProxy(GenericObject);
   }
 }

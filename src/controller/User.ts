@@ -2,7 +2,9 @@ import { Context } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication";
 import { sqIAM } from "../clients/iam";
+import { AuthenticationRequiredError } from "../errors";
 import AuthUtils from "../utils/AuthUtils";
+import { TokenPair } from "../utils/TokenFactory";
 import { Resource } from "./Resource";
 
 export class User {
@@ -67,21 +69,13 @@ export class User {
 
   static signIn =
     (context: Context) =>
-    async (
-      login: string,
-      password: string,
-      resourceId: string,
-      isSession?: boolean
-    ) => {
+    async (login: string, password: string, resourceId: string) => {
       const [userId, errors] = await sqAuthentication.mutate(
         (Mutation) =>
           Mutation.userAuthenticate({ login, password, resourceId })?.userId
       );
 
-      console.log(userId);
-
       if (errors) {
-        console.error(errors);
         throw new GraphQLError(`Authentication failed`);
       }
 
@@ -89,62 +83,62 @@ export class User {
 
       const user = await User.user(userId);
 
-      const state = authUtils.set(resourceId, userId, isSession, {
-        "*": user.isAdmin ? ["*"] : [],
-      });
-
-      const totalUsers = authUtils.all().length;
+      const state = authUtils.createState(
+        {
+          userId,
+          resourceId,
+        },
+        {
+          "*": user.isAdmin ? ["*"] : [],
+        }
+      );
 
       return {
         tokenPair: state.tokenPair,
         user,
-        /**
-         * Is off by one because the user is not yet added to the state on first login
-         */
-        totalUsers,
+        me: () => User.me(context)(),
       };
     };
 
-  static signOut = (context: Context) => async (resourceId?: string) => {
+  static signOut = (context: Context) => (resourceId?: string) => {
     const authUtils = new AuthUtils(context);
 
-    if (resourceId) {
-      authUtils.delete(resourceId);
-    } else {
-      authUtils.clear();
-    }
+    authUtils.block(resourceId);
 
     return true;
   };
 
-  static me = (context: Context) => async (resourceId?: string) => {
+  static me = (context: Context) => (resourceId?: string) => {
     const authUtils = new AuthUtils(context);
 
-    if (!resourceId) {
-      const allState = authUtils.all();
+    const authenticatedUsers = authUtils.authenticatedUsers();
 
-      return {
-        totalUsers: allState.length,
-        users: allState.map((state) => ({
-          tokenPair: state.tokenPair,
-          user: () => User.user(state.userId),
-        })),
-      };
-    } else {
-      const state = authUtils.get(resourceId);
-
-      if (!state) {
-        throw new GraphQLError(`Not authenticated`);
-      }
-
-      return {
-        totalUsers: 1,
-        users: [
-          { tokenPair: state.tokenPair, user: () => User.user(state.userId) },
-        ],
-      };
+    if (authenticatedUsers.length === 0) {
+      throw new AuthenticationRequiredError();
     }
+
+    return authenticatedUsers.map(({ payload }) => ({
+      user: () => User.user(payload.sub),
+      issuedAt: () =>
+        payload.iat ? new Date(payload.iat * 1000).toISOString() : null,
+      expiresAt: () =>
+        payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+    }));
   };
+
+  static refresh =
+    (context: Context) => (accessToken: string, refreshToken: string) => {
+      const authUtils = new AuthUtils(context);
+
+      const tokenPair = authUtils.refreshTokenPair(
+        new TokenPair(accessToken, refreshToken)
+      );
+
+      return {
+        tokenPair,
+        me: () => User.me(context)(),
+      };
+    };
 
   id: string;
   username: string;

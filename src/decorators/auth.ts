@@ -2,6 +2,7 @@ import { GraphQLError } from "graphql";
 import { Context, Decorator } from "@snek-at/function";
 
 import AuthUtils from "../utils/AuthUtils";
+import { AuthenticationRequiredError } from "../errors";
 
 export const isAuthenticated: Decorator<[resourceId: string]> = (
   context,
@@ -11,26 +12,21 @@ export const isAuthenticated: Decorator<[resourceId: string]> = (
 
   const authUtils = new AuthUtils(context);
 
-  try {
-    authUtils.get(resourceId);
+  const isResourceAuthenticated = authUtils.isResourceAuthenticated(resourceId);
 
-    return;
-  } catch {}
+  if (isResourceAuthenticated) return;
 
-  throw new GraphQLError(
-    `You are not authenticated. Please login to access resource ${resourceId}`
-  );
+  throw new AuthenticationRequiredError();
 };
 
 export const isAuthenticatedOnResource =
   (resourceId: string) => (context: Context) => {
     const authUtils = new AuthUtils(context);
 
-    try {
-      return authUtils.get(resourceId);
-    } catch {}
+    const isResourceAuthenticated =
+      authUtils.isResourceAuthenticated(resourceId);
 
-    throw new GraphQLError(
-      `You are not authenticated. Please login to access resource ${resourceId}`
-    );
+    if (isResourceAuthenticated) return;
+
+    throw new AuthenticationRequiredError();
   };

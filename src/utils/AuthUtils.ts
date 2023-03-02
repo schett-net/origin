@@ -1,9 +1,11 @@
 import { GraphQLError } from "graphql";
 import { Context } from "@snek-at/function/dist/withContext";
-import TokenUtils, { TokenFactory, TokenPair } from "./TokenUtils";
+import { TokenFactory, TokenPair } from "./TokenFactory";
+import { InvalidTokenError } from "../errors";
 
 interface AuthState {
   userId: string;
+  resourceId: string;
   scope: {
     [key: string]: string[];
   };
@@ -11,86 +13,118 @@ interface AuthState {
 }
 
 export default class AuthUtils {
-  public tokenUtils: TokenUtils;
+  static accessTokenBlacklist: string[] = [];
 
   constructor(public context: Context) {
     this.context = context;
-    this.tokenUtils = new TokenUtils(context);
   }
 
-  set(
-    resdId: string,
-    userId: string,
-    isSession?: boolean,
-    scope: {
-      [key: string]: string[];
-    } = {}
+  createState(
+    ids: {
+      userId: string;
+      resourceId: string;
+    },
+    scope: AuthState["scope"]
   ): AuthState {
-    const tokenPair = TokenFactory.createTokenPair(userId, scope);
+    const tokenPair = TokenFactory.createTokenPair(ids, scope);
 
-    this.tokenUtils.set(resdId, tokenPair, isSession);
-
-    const authState: AuthState = {
-      userId,
+    return {
+      userId: ids.userId,
+      resourceId: ids.resourceId,
       scope,
       tokenPair,
     };
-
-    return authState;
   }
 
-  get(resdId: string, isSession?: boolean): AuthState {
-    let tokenPair = this.tokenUtils.get(resdId);
+  refreshTokenPair(tokenPair: TokenPair): TokenPair {
+    const { accessToken, refreshToken } = tokenPair;
 
-    console.log("authState tokenPair", tokenPair);
+    // check if access token is blacklisted
 
-    if (!tokenPair.accessToken && !tokenPair.refreshToken) {
-      throw new Error("No token pair found");
-    } else if (!tokenPair.accessToken && tokenPair.refreshToken) {
-      console.log("createTokenPairFromToken access");
-
-      try {
-        tokenPair = TokenFactory.createTokenPairFromToken(
-          tokenPair.refreshToken
-        );
-        this.tokenUtils.set(resdId, tokenPair, isSession);
-      } catch (e) {
-        throw new GraphQLError("Refresh token expired. Please login again");
-      }
-    } else if (!tokenPair.refreshToken) {
-      throw new GraphQLError("No refresh token found. Please login again");
+    if (this.isBlacklisted(accessToken)) {
+      throw new InvalidTokenError();
     }
 
-    console.log("authState tokenPair 2", tokenPair);
+    // check if access token is valid
 
-    const payload = TokenFactory.readToken(tokenPair.accessToken);
-
-    const authState: AuthState = {
-      userId: payload.sub,
-      scope: payload.scope,
-      tokenPair,
-    };
-
-    return authState;
-  }
-
-  delete(resdId: string) {
-    this.tokenUtils.delete(resdId);
-  }
-
-  clear() {
-    this.tokenUtils.clear();
-  }
-
-  all(): AuthState[] {
-    const resourceIds = this.tokenUtils.allResourceIds();
-
-    const authStates: AuthState[] = [];
-
-    resourceIds.forEach((resourceId) => {
-      authStates.push(this.get(resourceId));
+    const accessTokenPayload = TokenFactory.readToken(accessToken, {
+      ignoreExpiration: true,
     });
 
-    return authStates;
+    const refreshedTokenPair =
+      TokenFactory.createTokenPairFromRefreshToken(refreshToken);
+
+    return refreshedTokenPair;
+  }
+
+  authenticatedUsers = () => {
+    // Get all Authorization headers from the request
+    const authHeaders = this.context.req.headers.authorization?.split(", ");
+
+    // Get all access tokens from the Authorization headers
+    const accessTokens = authHeaders?.map((header) => {
+      const [type, token] = header.split(" ");
+
+      if (type !== "Bearer") {
+        throw new InvalidTokenError();
+      }
+
+      return {
+        payload: TokenFactory.readToken(token),
+        raw: token,
+      };
+    });
+
+    // Get all user ids from the access tokens
+
+    return accessTokens || [];
+  };
+
+  isBlacklisted(token: string) {
+    return AuthUtils.accessTokenBlacklist.includes(token);
+  }
+
+  isResourceAuthenticated(resourceId: string) {
+    const authenticatedUsers = this.authenticatedUsers();
+
+    const found = authenticatedUsers.find(
+      (user) => user.payload.resourceId === resourceId
+    );
+
+    // check if the token is blacklisted
+    if (found) {
+      if (this.isBlacklisted(found.raw)) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  block(resourceId?: string) {
+    // Block the user from accessing the resource or all authenticated users
+
+    const authenticatedUsers = this.authenticatedUsers();
+
+    if (resourceId) {
+      // Block the user from accessing the resource
+
+      const payload = authenticatedUsers.find(
+        (user) => user.payload.resourceId === resourceId
+      );
+
+      if (!payload) {
+        throw new GraphQLError("Cannot block user from resource");
+      }
+
+      AuthUtils.accessTokenBlacklist.push(payload.raw);
+    } else {
+      // Block all authenticated users
+
+      authenticatedUsers.forEach((user) => {
+        AuthUtils.accessTokenBlacklist.push(user.raw);
+      });
+    }
   }
 }

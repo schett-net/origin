@@ -1,23 +1,23 @@
 {
   "name": "@snek-functions/origin",
   "baseURL": "https://services.snek.at/origin",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "Generated with `sf new`",
   "author": "snek-at",
   "exports": {
-    "./client": "./src/client/index.ts",
+    "./client": "./client/index.ts",
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
       "./client": [
-        "./src/client/index.ts"
+        "./client/index.ts"
       ]
     }
   },
   "files": [
-    "src/client",
+    "client",
     "package.json"
   ],
   "config": {
