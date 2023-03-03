@@ -54,6 +54,11 @@ export class Resource {
     if (requestedUser) {
       const state = authUtils.createState(requestedUser, user.payload.scope);
 
+      // override context authorization
+      context.req.headers[
+        "authorization"
+      ] = `Bearer ${state.tokenPair.accessToken}`;
+
       return {
         tokenPair: state.tokenPair,
         user: () => User.user(context)(requestedUser.userId),
@@ -68,8 +73,6 @@ export class Resource {
     (context: Context) => async (resourceId: string, migrationURL: string) => {
       const r = await Resource.resource(context)(resourceId);
       const config = await r.config();
-
-      console.log("config", config);
 
       if (!config.jaen) {
         throw new GraphQLError(

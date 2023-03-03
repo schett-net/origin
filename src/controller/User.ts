@@ -82,8 +82,6 @@ export class User {
           Mutation.userAuthenticate({ login, password, resourceId })?.userId
       );
 
-      console.log("userId", userId);
-
       if (errors) {
         throw new AuthenticationFailedError();
       }
@@ -91,8 +89,6 @@ export class User {
       const authUtils = new AuthUtils(context);
 
       const user = await User.user(context)(userId);
-
-      console.log("user", user);
 
       const state = authUtils.createState(
         {
@@ -104,11 +100,23 @@ export class User {
         }
       );
 
-      console.log("state", state);
+      // override context authorization
+      context.req.headers[
+        "authorization"
+      ] = `Bearer ${state.tokenPair.accessToken}`;
+
+      const userWithUpdatedCtx = new User(
+        context,
+        user.id,
+        user.username,
+        user.primaryEmail,
+        user.emails,
+        user.resourceId
+      );
 
       return {
         tokenPair: state.tokenPair,
-        user,
+        user: userWithUpdatedCtx,
         me: () => User.me(context)(resourceId),
       };
     };
