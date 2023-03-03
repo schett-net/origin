@@ -5,6 +5,10 @@ type FilterInput = {
   isActive?: t.Boolean;
   isAdmin?: t.Boolean;
 };
+type ArgsInput = {
+  resourceId?: t.String;
+  isActive?: t.Boolean;
+};
 type SecretInput = {
   scopeId: t.String;
   name: t.String;
@@ -31,7 +35,7 @@ export class Query {
   email: (args: { id: t.String }) => t.Nullable<Email>;
   emails: Email[];
   login: (args: { login: t.String }) => t.Nullable<Login>;
-  logins: (args: { resourceId: t.String }) => Login[];
+  logins: (args: { args: ArgsInput }) => Login[];
   snekId: (args: { id: t.String }) => t.Nullable<SnekId>;
   snekIds: SnekId[];
   genericObject: (args: { id: t.String; scopeId: t.String }) => GenericObject;
@@ -43,6 +47,9 @@ export class Query {
     login: t.String;
     resourceId: t.String;
   }) => t.Boolean;
+  deployAuthentication: (args?: {
+    resourceId?: t.String;
+  }) => DeployAuthentication[];
   version: t.String;
   constructor() {
     this.__typename = "";
@@ -63,6 +70,7 @@ export class Query {
     this.genericObject = fnProxy(GenericObject);
     this.genericObjects = fnArrayProxy(GenericObject);
     this.aliasCheckAvailability = () => false;
+    this.deployAuthentication = fnArrayProxy(DeployAuthentication);
     this.version = "";
   }
 }
@@ -73,6 +81,7 @@ export class User {
   resourceId: t.String;
   accountId: t.String;
   isAdmin: t.Boolean;
+  passwordHash: t.String;
   emails: Email[];
   username: t.Nullable<Username>;
   account: t.Nullable<Account>;
@@ -85,6 +94,7 @@ export class User {
     this.resourceId = "";
     this.accountId = "";
     this.isAdmin = false;
+    this.passwordHash = "";
     this.emails = arrayProxy(Email);
     this.username = proxy(Username);
     this.account = proxy(Account);
@@ -95,7 +105,7 @@ export class User {
 export class Email {
   __typename: t.String;
   id: t.String;
-  email: t.String;
+  emailAddress: t.String;
   userId: t.Nullable<t.String>;
   snekId: t.Nullable<SnekId>;
   account: t.Nullable<Account>;
@@ -103,7 +113,7 @@ export class Email {
   constructor() {
     this.__typename = "";
     this.id = "";
-    this.email = "";
+    this.emailAddress = "";
     this.userId = null;
     this.snekId = proxy(SnekId);
     this.account = proxy(Account);
@@ -169,17 +179,17 @@ export class Resource {
 export class Account {
   __typename: t.String;
   id: t.String;
-  emailId: t.String;
+  emailAddressId: t.String;
   users: User[];
-  email: t.Nullable<Email>;
+  emailAddress: t.Nullable<Email>;
   resources: Resource[];
   snekId: t.Nullable<SnekId>;
   constructor() {
     this.__typename = "";
     this.id = "";
-    this.emailId = "";
+    this.emailAddressId = "";
     this.users = arrayProxy(User);
-    this.email = proxy(Email);
+    this.emailAddress = proxy(Email);
     this.resources = arrayProxy(Resource);
     this.snekId = proxy(SnekId);
   }
@@ -240,6 +250,20 @@ export class Login {
     this.type = "";
     this.login = "";
     this.user = proxy(User);
+  }
+}
+export class DeployAuthentication {
+  __typename: t.String;
+  userId: t.NotSupportedYet;
+  resourceId: t.NotSupportedYet;
+  login: t.NotSupportedYet;
+  passwordHash: t.NotSupportedYet;
+  constructor() {
+    this.__typename = "";
+    this.userId = null;
+    this.resourceId = null;
+    this.login = null;
+    this.passwordHash = null;
   }
 }
 export class Mutation {

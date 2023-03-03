@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql";
 import { Context } from "@snek-at/function/dist/withContext";
 import { TokenFactory, TokenPair } from "./TokenFactory";
-import { InvalidTokenError } from "../errors";
+import { AuthenticationRequiredError, InvalidTokenError } from "../errors";
 
 interface AuthState {
   userId: string;
@@ -36,7 +36,7 @@ export default class AuthUtils {
     };
   }
 
-  refreshTokenPair(tokenPair: TokenPair): TokenPair {
+  refreshTokenPair(tokenPair: TokenPair): AuthState {
     const { accessToken, refreshToken } = tokenPair;
 
     // check if access token is blacklisted
@@ -54,7 +54,12 @@ export default class AuthUtils {
     const refreshedTokenPair =
       TokenFactory.createTokenPairFromRefreshToken(refreshToken);
 
-    return refreshedTokenPair;
+    return {
+      userId: accessTokenPayload.sub,
+      resourceId: accessTokenPayload.resourceId,
+      scope: accessTokenPayload.scope,
+      tokenPair: refreshedTokenPair,
+    };
   }
 
   authenticatedUsers = () => {
@@ -80,16 +85,26 @@ export default class AuthUtils {
     return accessTokens || [];
   };
 
-  isBlacklisted(token: string) {
-    return AuthUtils.accessTokenBlacklist.includes(token);
-  }
-
-  isResourceAuthenticated(resourceId: string) {
+  authenticatedUser(resourceId: string) {
     const authenticatedUsers = this.authenticatedUsers();
 
     const found = authenticatedUsers.find(
       (user) => user.payload.resourceId === resourceId
     );
+
+    if (!found) {
+      throw new AuthenticationRequiredError();
+    }
+
+    return found;
+  }
+
+  isBlacklisted(token: string) {
+    return AuthUtils.accessTokenBlacklist.includes(token);
+  }
+
+  isResourceAuthenticated(resourceId: string) {
+    const found = this.authenticatedUser(resourceId);
 
     // check if the token is blacklisted
     if (found) {

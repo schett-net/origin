@@ -97,4 +97,26 @@ export class InputValidationError extends GraphQLError {
   }
 }
 
-// ... other custom errors for your application
+export class ResourceNotFoundError extends GraphQLError {
+  extensions: GraphQLErrorExtensions;
+  constructor() {
+    super("Resource not found");
+    this.extensions = {
+      statusCode: 404,
+      code: "RESOURCE_NOT_FOUND",
+      description: "The requested resource could not be found",
+    };
+  }
+}
+
+export class AuthenticationFailedError extends GraphQLError {
+  extensions: GraphQLErrorExtensions;
+  constructor() {
+    super("Authentication failed");
+    this.extensions = {
+      statusCode: 401,
+      code: "AUTHENTICATION_FAILED",
+      description: "Authentication failed",
+    };
+  }
+}

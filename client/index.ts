@@ -3,7 +3,7 @@ import {
   Query,
   Mutation,
   TokenPair as _TokenPair,
-} from "./schema.generated.js";
+} from "./schema.generated";
 
 type TokenPair = Pick<_TokenPair, "accessToken" | "refreshToken">;
 

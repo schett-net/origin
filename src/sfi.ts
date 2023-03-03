@@ -1,8 +1,5 @@
 import { defineService, withContext } from "@snek-at/function";
 import cors from "cors";
-import { GraphQLError } from "graphql";
-
-import { sqJaenAgent } from "./clients/jaenagent";
 
 import { Resource } from "./controller/Resource";
 import { User } from "./controller/User";
@@ -12,12 +9,13 @@ export default defineService(
   {
     Query: {
       me: withContext(User.me),
+      resource: withContext(Resource.resource),
     },
     Mutation: {
       signIn: withContext(User.signIn),
       signOut: withContext(User.signOut),
       refresh: withContext(User.refresh),
-      resourceSignIn: withContext(Resource.resourceSignIn, {
+      resourceAccess: withContext(Resource.access, {
         decorators: [
           isAuthenticatedOnResource("7f2734cf-9283-4568-94d1-8903354ca382"),
         ],

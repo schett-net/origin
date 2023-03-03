@@ -3,9 +3,12 @@ import { GraphQLError } from "graphql";
 
 import { sqIAM } from "../clients/iam";
 import { sqJaenAgent } from "../clients/jaenagent";
+import { UnauthorizedError } from "../errors";
+import AuthUtils from "../utils/AuthUtils";
+import { User } from "./User";
 
 export class Resource {
-  static async resource(id: string) {
+  static resource = (context: Context) => async (id: string) => {
     const [resource, errors] = await sqIAM.query((Query) => {
       const r = Query.resource({ id });
 
@@ -19,16 +22,51 @@ export class Resource {
       throw new Error(errors[0].message);
     }
 
-    return new Resource(resource.id, resource.name);
-  }
+    return new Resource(context, resource.id, resource.name);
+  };
 
-  static resourceSignIn = (context: Context) => async (id: string) => {
-    return "Theore this should perform a sign in on the resource";
+  static access = (context: Context) => async (id: string) => {
+    const authUtils = new AuthUtils(context);
+
+    const user = authUtils.authenticatedUser(
+      "7f2734cf-9283-4568-94d1-8903354ca382"
+    );
+
+    const [usersUnderSameAccount, errors] = await sqIAM.query((Query) => {
+      return (
+        Query.user({ id: user.payload.sub }).account?.users.map((u) => {
+          return {
+            userId: u.id,
+            resourceId: u.resourceId,
+          };
+        }) ?? []
+      );
+    });
+
+    if (errors) {
+      throw new Error(errors[0].message);
+    }
+
+    const requestedUser = usersUnderSameAccount.find(
+      (u) => u.resourceId === id
+    );
+
+    if (requestedUser) {
+      const state = authUtils.createState(requestedUser, user.payload.scope);
+
+      return {
+        tokenPair: state.tokenPair,
+        user: () => User.user(context)(requestedUser.userId),
+        me: () => User.me(context)(),
+      };
+    }
+
+    throw new UnauthorizedError();
   };
 
   static jaenPublish =
-    () => async (resourceId: string, migrationURL: string) => {
-      const r = await Resource.resource(resourceId);
+    (context: Context) => async (resourceId: string, migrationURL: string) => {
+      const r = await Resource.resource(context)(resourceId);
       const config = await r.config();
 
       console.log("config", config);
@@ -80,14 +118,20 @@ export class Resource {
       return "Published";
     };
 
+  #context: Context;
+
   id: string;
   name: string;
 
-  constructor(id: string, name: string) {
+  constructor(context: Context, id: string, name: string) {
+    this.#context = context;
     this.id = id;
     this.name = name;
   }
 
+  /**
+   * Authorization required
+   */
   async config(): Promise<{
     jaen?: {
       repository: string;
@@ -99,6 +143,12 @@ export class Resource {
       signOutURL?: string;
     };
   }> {
+    const authUtils = new AuthUtils(this.#context);
+
+    if (!authUtils.isResourceAuthenticated(this.id)) {
+      throw new UnauthorizedError();
+    }
+
     const [config, errors] = await sqIAM.query((Query) => {
       const c = Query.resource({ id: this.id }).config;
 
@@ -112,7 +162,16 @@ export class Resource {
     return config;
   }
 
+  /**
+   * Authorization required
+   */
   async secret(name: string) {
+    const authUtils = new AuthUtils(this.#context);
+
+    if (!authUtils.isResourceAuthenticated(this.id)) {
+      throw new UnauthorizedError();
+    }
+
     const [secret, errors] = await sqIAM.query((Query) => {
       const s = Query.resource({ id: this.id }).secret({ name });
 
