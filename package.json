@@ -1,7 +1,7 @@
 {
   "name": "@snek-functions/origin",
   "baseURL": "https://services.snek.at/origin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Generated with `sf new`",
   "author": "snek-at",

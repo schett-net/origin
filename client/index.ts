@@ -1,9 +1,5 @@
 import { makeSnekQuery } from "snek-query";
-import {
-  Query,
-  Mutation,
-  TokenPair as _TokenPair,
-} from "./schema.generated";
+import { Query, Mutation, TokenPair as _TokenPair } from "./schema.generated";
 
 type TokenPair = Pick<_TokenPair, "accessToken" | "refreshToken">;
 
@@ -104,4 +100,17 @@ export const getTokenPair = () => {
   }
 
   return JSON.parse(tokenPair) as TokenPair;
+};
+
+/**
+ * Checks if the user is logged in via session storage.
+ * It does not check if the user is logged in at all.
+ *
+ * So if the user is logged in via local storage, this function will return false.
+ * To check if the user is logged in, use the getTokenPair function.
+ *
+ * @returns {boolean} true if the user is logged in via session storage
+ */
+export const isSession = (): boolean => {
+  return !!sessionStorage.getItem(TOKEN_PAIR_KEY);
 };
