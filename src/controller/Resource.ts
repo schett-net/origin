@@ -3,71 +3,46 @@ import { GraphQLError } from "graphql";
 
 import { sqIAM } from "../clients/iam";
 import { sqJaenAgent } from "../clients/jaenagent";
-import { UnauthorizedError } from "../errors";
-import AuthUtils from "../utils/AuthUtils";
-import { User } from "./User";
 
 export class Resource {
   static resource = (context: Context) => async (id: string) => {
-    const [resource, errors] = await sqIAM.query((Query) => {
-      const r = Query.resource({ id });
+    const [resource, errors] = await sqIAM.query(
+      (Query) => {
+        const r = Query.resource({ id });
 
-      return {
-        id: r?.id,
-        name: r.name,
-      };
-    });
-
-    if (errors) {
-      throw new Error(errors[0].message);
-    }
-
-    return new Resource(context, resource.id, resource.name);
-  };
-
-  static access = (context: Context) => async (id: string) => {
-    const authUtils = new AuthUtils(context);
-
-    const user = authUtils.authenticatedUser(
-      "7f2734cf-9283-4568-94d1-8903354ca382"
+        return {
+          id: r?.id,
+          name: r.name,
+        };
+      },
+      {
+        headers: {
+          Authorization: context.req.headers.authorization || "",
+        },
+      }
     );
 
-    const [usersUnderSameAccount, errors] = await sqIAM.query((Query) => {
-      return (
-        Query.user({ id: user.payload.sub }).account?.users.map((u) => {
-          return {
-            userId: u.id,
-            resourceId: u.resourceId,
-          };
-        }) ?? []
-      );
-    });
-
     if (errors) {
-      throw new Error(errors[0].message);
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
     }
 
-    const requestedUser = usersUnderSameAccount.find(
-      (u) => u.resourceId === id
-    );
-
-    if (requestedUser) {
-      const state = authUtils.createState(requestedUser, user.payload.scope);
-
-      // override context authorization
-      context.req.headers[
-        "authorization"
-      ] = `Bearer ${state.tokenPair.accessToken}`;
-
-      return {
-        tokenPair: state.tokenPair,
-        user: () => User.user(context)(requestedUser.userId),
-        me: () => User.me(context)(),
-      };
-    }
-
-    throw new UnauthorizedError();
+    return new Resource(context, resource);
   };
+
+  #context: Context;
+
+  id: string;
+  name: string;
+
+  constructor(context: Context, data: { id: string; name: string }) {
+    this.#context = context;
+
+    for (const key in data) {
+      this[key] = data[key];
+    }
+  }
 
   static jaenPublish =
     (context: Context) => async (resourceId: string, migrationURL: string) => {
@@ -115,22 +90,13 @@ export class Resource {
       });
 
       if (errors) {
-        throw new GraphQLError(errors[0].message);
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
       }
 
       return "Published";
     };
-
-  #context: Context;
-
-  id: string;
-  name: string;
-
-  constructor(context: Context, id: string, name: string) {
-    this.#context = context;
-    this.id = id;
-    this.name = name;
-  }
 
   /**
    * Authorization required
@@ -146,46 +112,49 @@ export class Resource {
       signOutURL?: string;
     };
   }> {
-    const authUtils = new AuthUtils(this.#context);
+    const [config, errors] = await sqIAM.query(
+      (Query) => {
+        const c = Query.resource({ id: this.id }).config;
 
-    if (!authUtils.isResourceAuthenticated(this.id)) {
-      throw new UnauthorizedError();
-    }
-
-    const [config, errors] = await sqIAM.query((Query) => {
-      const c = Query.resource({ id: this.id }).config;
-
-      return c.value;
-    });
+        return c.value;
+      },
+      {
+        headers: {
+          Authorization: this.#context.req.headers.authorization || "",
+        },
+      }
+    );
 
     if (errors) {
-      throw new Error(errors[0].message);
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
     }
 
     return config;
   }
 
-  /**
-   * Authorization required
-   */
   async secret(name: string) {
-    const authUtils = new AuthUtils(this.#context);
+    const [secret, errors] = await sqIAM.query(
+      (Query) => {
+        const s = Query.resource({ id: this.id }).secret({ name });
 
-    if (!authUtils.isResourceAuthenticated(this.id)) {
-      throw new UnauthorizedError();
-    }
-
-    const [secret, errors] = await sqIAM.query((Query) => {
-      const s = Query.resource({ id: this.id }).secret({ name });
-
-      return {
-        name: s.name,
-        value: s.value,
-      };
-    });
+        return {
+          name: s.name,
+          value: s.value,
+        };
+      },
+      {
+        headers: {
+          Authorization: this.#context.req.headers.authorization || "",
+        },
+      }
+    );
 
     if (errors) {
-      throw new Error(errors[0].message);
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
     }
 
     return secret;

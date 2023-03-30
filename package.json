@@ -29,9 +29,10 @@
     "@snek-at/function": "*",
     "@snek-at/function-cli": "*",
     "@snek-at/function-server": "*",
+    "@snek-functions/jwt": "^0.0.15",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.55"
+    "snek-query": "^0.0.62"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

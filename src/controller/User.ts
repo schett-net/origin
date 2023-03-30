@@ -1,76 +1,121 @@
 import { Context } from "@snek-at/function";
+import {
+  sq as sqJWT,
+  anyLoginRequired,
+  AuthenticationContext,
+  loginRequired,
+} from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication";
+
 import { sqIAM } from "../clients/iam";
-import {
-  AuthenticationFailedError,
-  AuthenticationRequiredError,
-} from "../errors";
-import AuthUtils from "../utils/AuthUtils";
-import { TokenPair } from "../utils/TokenFactory";
+import { Mutation } from "../clients/iam/schema.generated";
+import { ACCESS_RESOURCE_ID } from "../constants";
+import { AuthenticationFailedError } from "../errors";
+import { tokenCreate, tokenRefresh } from "../utils/token";
 import { Resource } from "./Resource";
+
+type RegisterInput = Parameters<Mutation["userCreate"]>[0];
 
 export class User {
   static user = (context: Context) => async (id: string) => {
-    const [user, errors] = await sqIAM.query((Query) => {
-      const u = Query.user({ id });
+    const [data, errors] = await sqIAM.query(
+      (Query) => {
+        const u = Query.user({ id });
 
-      return {
-        id: u.id,
-        username: u.username?.username ?? "fallback",
-        primaryEmail:
-          u.account?.emailAddress?.emailAddress ?? "fallback@snek.at",
-        emails: u.emails.map((e) => e.emailAddress),
-        recourceId: u.resourceId,
-      };
-    });
+        return {
+          id: u.id,
+          username: u.username,
+          primaryEmailAddress: u.primaryEmailAddress.emailAddress,
+          emailAddresses: u.emails.map((e) => e.emailAddress),
+          resourceId: u.resourceId,
+          isAdmin: u.isAdmin,
+        };
+      },
+      {
+        headers: {
+          Authorization: context.req.headers.authorization || "",
+        },
+      }
+    );
 
     if (errors) {
-      throw new Error(errors[0].message);
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
     }
 
-    return new User(
-      context,
-      user.id,
-      user.username,
-      user.primaryEmail,
-      user.emails,
-      user.recourceId
-    );
+    return new User(context, data);
   };
 
-  static users = (context: Context) => async (filter?: { ids?: string[] }) => {
-    const [users, errors] = await sqIAM.query((Query) => {
-      const u = Query.users({
-        filter: {
-          ids: filter?.ids,
+  static register =
+    (context: Context) =>
+    async (
+      resourceId: RegisterInput["resourceId"],
+      values: RegisterInput["values"],
+      skipEmailVerification?: RegisterInput["skipEmailVerification"]
+    ) => {
+      const [userId, errors] = await sqIAM.mutate(
+        (Mutation) => {
+          const u = Mutation.userCreate({
+            resourceId,
+            values,
+            skipEmailVerification: skipEmailVerification || false,
+          });
+
+          return u.id;
         },
-      });
+        {
+          headers: {
+            Authorization: context.req.headers.authorization || "",
+          },
+        }
+      );
 
-      return u.map((u) => ({
-        id: u.id,
-        username: u.username?.username ?? "fallback",
-        primaryEmail:
-          u.account?.emailAddress?.emailAddress ?? "fallback@snek.at",
-        emails: u.emails.map((e) => e.emailAddress),
-        recourceId: u.resourceId,
-      }));
-    });
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
 
-    if (errors) {
-      throw new Error(errors[0].message);
-    }
+      return {
+        user: () => User.user(context)(userId),
+      };
+    };
 
-    return users.map(
-      (user) =>
-        new User(
-          context,
-          user.id,
-          user.username,
-          user.primaryEmail,
-          user.emails,
-          user.recourceId
-        )
+  static me = (context: Context) => async () => {
+    const authenticationInfo = await anyLoginRequired(context);
+
+    return Promise.all(
+      authenticationInfo.map(async ({ authenticationInfo }) => {
+        const [data, errors] = await sqIAM.query(
+          (User) => {
+            const u = User.user({ id: authenticationInfo.userId });
+
+            return {
+              id: u.id,
+              username: u.username,
+              primaryEmailAddress: u.primaryEmailAddress.emailAddress,
+              emailAddresses: u.emails.map((e) => e.emailAddress),
+              resourceId: u.resourceId,
+              isAdmin: u.isAdmin,
+            };
+          },
+          {
+            headers: {
+              Authorization: context.req.headers.authorization || "",
+            },
+          }
+        );
+
+        if (errors) {
+          throw new GraphQLError(errors[0].message, {
+            extensions: errors[0].extensions,
+          });
+        }
+
+        return new User(context, data);
+      })
     );
   };
 
@@ -86,108 +131,148 @@ export class User {
         throw new AuthenticationFailedError();
       }
 
-      const authUtils = new AuthUtils(context);
-
-      const user = await User.user(context)(userId);
-
-      const state = authUtils.createState(
-        {
-          userId,
-          resourceId,
-        },
-        {
-          "*": user.isAdmin ? ["*"] : [],
-        }
-      );
+      const unprivilegedTokenPair = await tokenCreate(userId, resourceId);
 
       // override context authorization
       context.req.headers[
         "authorization"
-      ] = `Bearer ${state.tokenPair.accessToken}`;
+      ] = `Bearer ${unprivilegedTokenPair.accessToken}`;
 
-      const userWithUpdatedCtx = new User(
-        context,
-        user.id,
-        user.username,
-        user.primaryEmail,
-        user.emails,
-        user.resourceId
-      );
+      console.log("context.req.headers", context.req.headers);
+
+      // Get user to determine permissions
+      const user = await User.user(context)(userId);
+
+      console.log("user", user);
+
+      const scope: any = {};
+
+      if (user.isAdmin) {
+        scope.admin = ["*"];
+      }
+
+      // Create privileged access token
+      const tokenPair = await tokenCreate(userId, resourceId, scope);
+
+      // override context authorization
+      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
+
+      const userWithUpdatedCtx = new User(context, {
+        id: user.id,
+        username: user.username,
+        primaryEmailAddress: user.primaryEmailAddress,
+        emailAddresses: user.emailAddresses,
+        resourceId: user.resourceId,
+        isAdmin: user.isAdmin,
+      });
 
       return {
-        tokenPair: state.tokenPair,
+        tokenPair: tokenPair,
         user: userWithUpdatedCtx,
-        me: () => User.me(context)(resourceId),
+        me: () => User.me(context),
       };
     };
 
   static signOut = (context: Context) => (resourceId?: string) => {
-    const authUtils = new AuthUtils(context);
-
-    authUtils.block(resourceId);
-
-    return true;
-  };
-
-  static me = (context: Context) => (resourceId?: string) => {
-    const authUtils = new AuthUtils(context);
-
-    const authenticatedUsers = authUtils.authenticatedUsers();
-
-    if (authenticatedUsers.length === 0) {
-      throw new AuthenticationRequiredError();
-    }
-
-    return authenticatedUsers.map(({ payload }) => ({
-      user: () => User.user(context)(payload.sub),
-      issuedAt: () =>
-        payload.iat ? new Date(payload.iat * 1000).toISOString() : null,
-      expiresAt: () =>
-        payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
-    }));
+    throw new Error("Not implemented yet");
   };
 
   static refresh =
-    (context: Context) => (accessToken: string, refreshToken: string) => {
-      const authUtils = new AuthUtils(context);
+    (context: Context) => async (accessToken: string, refreshToken: string) => {
+      const tokenPair = await tokenRefresh({
+        accessToken,
+        refreshToken,
+      });
 
-      const { tokenPair, userId } = authUtils.refreshTokenPair(
-        new TokenPair(accessToken, refreshToken)
-      );
+      // override context authorization
+      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
 
       return {
         tokenPair,
         me: () => User.me(context)(),
-        user: () => User.user(context)(userId),
       };
     };
+
+  static ssoSignIn = (context: Context) => async (resourceId: string) => {
+    const { authenticationInfo } = await loginRequired(context, [
+      ACCESS_RESOURCE_ID,
+    ]);
+
+    const [usersUnderSameAccount, errors] = await sqIAM.query(
+      (Query) => {
+        return (
+          Query.user({ id: authenticationInfo.userId }).account?.users.map(
+            (u) => {
+              return {
+                userId: u.id,
+                resourceId: u.resourceId,
+              };
+            }
+          ) ?? []
+        );
+      },
+      {
+        headers: {
+          Authorization: context.req.headers.authorization || "",
+        },
+      }
+    );
+
+    if (errors) {
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
+    }
+
+    const userUnderSameAccount = usersUnderSameAccount.find(
+      (u) => u.resourceId === resourceId
+    );
+
+    if (userUnderSameAccount) {
+      const tokenPair = await tokenCreate(
+        userUnderSameAccount.userId,
+        resourceId
+      );
+
+      // override context authorization
+      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
+
+      return {
+        tokenPair: tokenPair,
+        user: () => User.user(context)(authenticationInfo.userId),
+        me: () => User.me(context)(),
+      };
+    }
+
+    throw new AuthenticationFailedError();
+  };
 
   #context: Context;
 
   id: string;
   username: string;
-  primaryEmail: string;
-  emails: string[];
+  primaryEmailAddress: string;
+  emailAddresses: string[];
   isAdmin: boolean;
 
   private resourceId: string;
 
   constructor(
     context: Context,
-    id: string,
-    username: string,
-    primaryEmail: string,
-    emails: string[],
-    resourceId: string
+    data: {
+      id: string;
+      username: string;
+      primaryEmailAddress: string;
+      emailAddresses: string[];
+      resourceId: string;
+      isAdmin: boolean;
+    }
   ) {
     this.#context = context;
 
-    this.id = id;
-    this.username = username;
-    this.primaryEmail = primaryEmail;
-    this.emails = emails;
-    this.isAdmin = true;
-    this.resourceId = resourceId;
+    for (const key in data) {
+      this[key] = data[key];
+    }
   }
 
   resource = async () => Resource.resource(this.#context)(this.resourceId);
