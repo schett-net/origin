@@ -11,10 +11,6 @@ export default defineService({
       decorators: [anyLoginRequired],
     }),
     resource: withContext(Resource.resource),
-    sqTest: async () => {
-      const [data] = await sqIAM.query((Query) => Query.user({ id: "1" }));
-      return data;
-    },
   },
   Mutation: {
     userSignIn: withContext(User.signIn),

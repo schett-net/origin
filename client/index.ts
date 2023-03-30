@@ -38,7 +38,7 @@ export const sq = makeSnekQuery(
       for (const err of graphQLErrors) {
         if (err.extensions?.code === "TOKEN_EXPIRED") {
           const [newTokens, errors] = await sq.mutate((Mutation) => {
-            const refresh = Mutation.refresh({
+            const refresh = Mutation.userRefresh({
               refreshToken: tokenPair.refreshToken,
               accessToken: tokenPair.accessToken,
             }).tokenPair;

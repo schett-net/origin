@@ -2,34 +2,32 @@
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
 
+type ValuesInputInput = {
+    emailAddress: t.String;
+    username: t.String;
+    password: t.String;
+    accountId?: t.String;
+    isActive?: t.Boolean;
+};
 
 export class Query {
     __typename: t.String;
-    me: (args?: {
-        resourceId?: t.String;
-    }) => Me[];
+    userMe: User[];
     resource: (args: {
         id: t.String;
     }) => Resource;
     version: t.String;
-    constructor() { this.__typename = ""; this.me = fnArrayProxy(Me); this.resource = fnProxy(Resource); this.version = ""; }
-}
-export class Me {
-    __typename: t.String;
-    user: User;
-    issuedAt: t.Nullable<t.String>;
-    expiresAt: t.Nullable<t.String>;
-    constructor() { this.__typename = ""; this.user = proxy(User); this.issuedAt = null; this.expiresAt = null; }
+    constructor() { this.__typename = ""; this.userMe = arrayProxy(User); this.resource = fnProxy(Resource); this.version = ""; }
 }
 export class User {
     __typename: t.String;
     id: t.String;
     username: t.String;
-    primaryEmail: t.String;
-    emails: t.String[];
+    primaryEmailAddress: t.String;
+    emailAddresses: t.String[];
     isAdmin: t.Boolean;
     resource: Resource;
-    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmail = ""; this.emails = []; this.isAdmin = false; this.resource = proxy(Resource); }
+    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmailAddress = ""; this.emailAddresses = []; this.isAdmin = false; this.resource = proxy(Resource); }
 }
 export class Resource {
     __typename: t.String;
@@ -68,53 +66,61 @@ export class Secret {
 }
 export class Mutation {
     __typename: t.String;
-    signIn: (args: {
+    userSignIn: (args: {
         login: t.String;
         password: t.String;
         resourceId: t.String;
-    }) => SignIn;
-    signOut: (args?: {
+    }) => UserSignIn;
+    userSignOut: (args?: {
         resourceId?: t.String;
-    }) => t.Boolean;
-    refresh: (args: {
+    }) => t.NotSupportedYet;
+    userRefresh: (args: {
         accessToken: t.String;
         refreshToken: t.String;
-    }) => Refresh;
-    resourceAccess: (args: {
-        id: t.String;
-    }) => ResourceAccess;
-    jaenPublish: (args: {
+    }) => UserRefresh;
+    userSSO: (args: {
+        resourceId: t.String;
+    }) => UserSSO;
+    resourceJaenPublish: (args: {
         resourceId: t.String;
         migrationURL: t.String;
     }) => t.String;
-    constructor() { this.__typename = ""; this.signIn = fnProxy(SignIn); this.signOut = () => false; this.refresh = fnProxy(Refresh); this.resourceAccess = fnProxy(ResourceAccess); this.jaenPublish = () => ""; }
+    userRegister: (args: {
+        resourceId: t.String;
+        values: ValuesInputInput;
+        skipEmailVerification?: t.Boolean;
+    }) => UserRegister;
+    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.resourceJaenPublish = () => ""; this.userRegister = fnProxy(UserRegister); }
 }
-export class SignIn {
+export class UserSignIn {
     __typename: t.String;
     tokenPair: TokenPair;
     user: User;
-    me: Me[];
-    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = arrayProxy(Me); }
+    me: User[];
+    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = arrayProxy(User); }
 }
 export class TokenPair {
     __typename: t.String;
     accessToken: t.String;
     refreshToken: t.String;
-    headers: t.NotSupportedYet;
-    constructor() { this.__typename = ""; this.accessToken = ""; this.refreshToken = ""; this.headers = null; }
+    constructor() { this.__typename = ""; this.accessToken = ""; this.refreshToken = ""; }
 }
-export class Refresh {
+export class UserRefresh {
     __typename: t.String;
     tokenPair: TokenPair;
-    me: Me[];
-    user: User;
-    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.me = arrayProxy(Me); this.user = proxy(User); }
+    me: User[];
+    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.me = arrayProxy(User); }
 }
-export class ResourceAccess {
+export class UserSSO {
     __typename: t.String;
     tokenPair: TokenPair;
     user: User;
-    me: Me[];
-    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = arrayProxy(Me); }
+    me: User[];
+    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = arrayProxy(User); }
+}
+export class UserRegister {
+    __typename: t.String;
+    user: User;
+    constructor() { this.__typename = ""; this.user = proxy(User); }
 }
 

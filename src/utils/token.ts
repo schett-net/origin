@@ -1,11 +1,16 @@
-import { sq as sqJWT, anyLoginRequired } from "@snek-functions/jwt";
+import { sq as sqJWT } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
+
+interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
 
 export const tokenCreate = async (
   userId: string,
   resourceId: string,
   scope: object = {}
-) => {
+): Promise<TokenPair> => {
   const [tokenPair, jwtErrors] = await sqJWT.mutate((Mutation) => {
     const t = Mutation.tokenCreate({
       userId,
@@ -31,7 +36,7 @@ export const tokenCreate = async (
 export const tokenRefresh = async (tokenPair: {
   accessToken: string;
   refreshToken: string;
-}) => {
+}): Promise<TokenPair> => {
   const [newTokenPair, jwtErrors] = await sqJWT.mutate((Mutation) => {
     const t = Mutation.tokenRefresh({
       accessToken: tokenPair.accessToken,
