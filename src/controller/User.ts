@@ -55,7 +55,7 @@ export class User {
       values: RegisterInput["values"],
       skipEmailVerification?: RegisterInput["skipEmailVerification"]
     ) => {
-      const [userId, errors] = await sqIAM.mutate(
+      const [{ userId, accessToken }, errors] = await sqIAM.mutate(
         (Mutation) => {
           const u = Mutation.userCreate({
             resourceId,
@@ -63,11 +63,14 @@ export class User {
             skipEmailVerification: skipEmailVerification || false,
           });
 
-          return u.id;
+          return {
+            userId: u.user.id,
+            accessToken: u.accessToken,
+          };
         },
         {
           headers: {
-            Authorization: context.req.headers.authorization || "",
+            Authorization: context.req.headers.authorization,
           },
         }
       );
@@ -80,11 +83,19 @@ export class User {
 
       return {
         user: () => User.user(context)(userId),
+        accessToken,
       };
     };
 
-  static me = (context: Context) => async () => {
-    const authenticationInfo = await anyLoginRequired(context);
+  static me = (context: Context) => async (resourceId?: string) => {
+    let authenticationInfo = await anyLoginRequired(context);
+
+    if (resourceId) {
+      authenticationInfo = authenticationInfo.filter(
+        (authenticationInfo) =>
+          authenticationInfo.authenticationInfo.resourceId === resourceId
+      );
+    }
 
     return Promise.all(
       authenticationInfo.map(async ({ authenticationInfo }) => {
@@ -224,22 +235,19 @@ export class User {
       });
     }
 
-    const userUnderSameAccount = usersUnderSameAccount.find(
+    const ssoUser = usersUnderSameAccount.find(
       (u) => u.resourceId === resourceId
     );
 
-    if (userUnderSameAccount) {
-      const tokenPair = await tokenCreate(
-        userUnderSameAccount.userId,
-        resourceId
-      );
+    if (ssoUser) {
+      const tokenPair = await tokenCreate(ssoUser.userId, resourceId);
 
       // override context authorization
       context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
 
       return {
         tokenPair: tokenPair,
-        user: () => User.user(context)(authenticationInfo.userId),
+        user: () => User.user(context)(ssoUser.userId),
         me: () => User.me(context)(),
       };
     }

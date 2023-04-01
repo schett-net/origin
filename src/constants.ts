@@ -1,2 +1,2 @@
 export const ACCESS_RESOURCE_ID =
-  process.env.ACCESS_RESOURCE_ID || "ea579cce-6efd-4589-b6f1-f49747c876e8";
+  process.env.ACCESS_RESOURCE_ID || "7f2734cf-9283-4568-94d1-8903354ca382";

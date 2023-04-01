@@ -12,12 +12,14 @@ type ValuesInputInput = {
 
 export class Query {
     __typename: t.String;
-    userMe: User[];
+    userMe: (args?: {
+        resourceId?: t.String;
+    }) => User[];
     resource: (args: {
         id: t.String;
     }) => Resource;
     version: t.String;
-    constructor() { this.__typename = ""; this.userMe = arrayProxy(User); this.resource = fnProxy(Resource); this.version = ""; }
+    constructor() { this.__typename = ""; this.userMe = fnArrayProxy(User); this.resource = fnProxy(Resource); this.version = ""; }
 }
 export class User {
     __typename: t.String;
@@ -96,8 +98,10 @@ export class UserSignIn {
     __typename: t.String;
     tokenPair: TokenPair;
     user: User;
-    me: User[];
-    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = arrayProxy(User); }
+    me: (args?: {
+        resourceId?: t.String;
+    }) => User[];
+    constructor() { this.__typename = ""; this.tokenPair = proxy(TokenPair); this.user = proxy(User); this.me = fnArrayProxy(User); }
 }
 export class TokenPair {
     __typename: t.String;

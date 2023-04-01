@@ -17,7 +17,7 @@ export class Resource {
       },
       {
         headers: {
-          Authorization: context.req.headers.authorization || "",
+          Authorization: context.req.headers.authorization,
         },
       }
     );

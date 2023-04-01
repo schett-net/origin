@@ -1,7 +1,7 @@
 {
   "name": "@snek-functions/origin",
   "baseURL": "https://services.snek.at/origin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "description": "Generated with `sf new`",
   "author": "snek-at",
@@ -29,10 +29,10 @@
     "@snek-at/function": "*",
     "@snek-at/function-cli": "*",
     "@snek-at/function-server": "*",
-    "@snek-functions/jwt": "^0.0.15",
+    "@snek-functions/jwt": "^0.0.23",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.62"
+    "snek-query": "^0.0.64"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
