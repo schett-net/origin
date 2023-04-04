@@ -9,13 +9,18 @@ import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication";
 
 import { sqIAM } from "../clients/iam";
-import { Mutation } from "../clients/iam/schema.generated";
+import { Mutation, User as IAMUser } from "../clients/iam/schema.generated";
 import { ACCESS_RESOURCE_ID } from "../constants";
 import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
 import { Resource } from "./Resource";
+import { UserEmail } from "./Email";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
+
+type UserEmailCreateInput = Parameters<Mutation["userEmailCreate"]>[0];
+type UserEmailDeleteInput = Parameters<Mutation["userEmailDelete"]>[0];
+type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
 export class User {
   static user = (context: Context) => async (id: string) => {
@@ -27,7 +32,6 @@ export class User {
           id: u.id,
           username: u.username,
           primaryEmailAddress: u.primaryEmail.emailAddress,
-          emailAddresses: u.emails.map((e) => e.emailAddress),
           resourceId: u.resourceId,
           isAdmin: u.isAdmin,
         };
@@ -98,35 +102,9 @@ export class User {
     }
 
     return Promise.all(
-      authenticationInfo.map(async ({ authenticationInfo }) => {
-        const [data, errors] = await sqIAM.query(
-          (User) => {
-            const u = User.user({ id: authenticationInfo.userId });
-
-            return {
-              id: u.id,
-              username: u.username,
-              primaryEmailAddress: u.primaryEmail.emailAddress,
-              emailAddresses: u.emails.map((e) => e.emailAddress),
-              resourceId: u.resourceId,
-              isAdmin: u.isAdmin,
-            };
-          },
-          {
-            headers: {
-              Authorization: context.req.headers.authorization || "",
-            },
-          }
-        );
-
-        if (errors) {
-          throw new GraphQLError(errors[0].message, {
-            extensions: errors[0].extensions,
-          });
-        }
-
-        return new User(context, data);
-      })
+      authenticationInfo.map(async ({ authenticationInfo }) =>
+        User.user(context)(authenticationInfo.userId)
+      )
     );
   };
 
@@ -172,7 +150,6 @@ export class User {
         id: user.id,
         username: user.username,
         primaryEmailAddress: user.primaryEmailAddress,
-        emailAddresses: user.emailAddresses,
         resourceId: user.resourceId,
         isAdmin: user.isAdmin,
       });
@@ -255,12 +232,49 @@ export class User {
     throw new AuthenticationFailedError();
   };
 
+  static emailCreate =
+    (context: Context) =>
+    async (
+      emailAddress: UserEmailCreateInput["emailAddress"],
+      isPrimary: UserEmailCreateInput["isPrimary"],
+      emailConfiguration: UserEmailCreateInput["emailConfiguration"]
+    ) => {
+      const auth = await anyLoginRequired(context);
+      const userId = auth[0].authenticationInfo.userId;
+
+      return await UserEmail.create(context)(userId, {
+        emailAddress,
+        isPrimary,
+        emailConfiguration,
+      });
+    };
+
+  static emailUpdate =
+    (context: Context) =>
+    async (
+      emailId: UserEmailUpdateInput["emailId"],
+      values: UserEmailUpdateInput["values"]
+    ) => {
+      const auth = await anyLoginRequired(context);
+      const userId = auth[0].authenticationInfo.userId;
+
+      console.log("emailId", emailId, userId, values);
+
+      return await UserEmail.update(context)(emailId, userId, values);
+    };
+
+  static emailDelete = (context: Context) => async (emailId: string) => {
+    const auth = await anyLoginRequired(context);
+    const userId = auth[0].authenticationInfo.userId;
+
+    return await UserEmail.delete(context)(emailId, userId);
+  };
+
   #context: Context;
 
   id: string;
   username: string;
   primaryEmailAddress: string;
-  emailAddresses: string[];
   isAdmin: boolean;
 
   private resourceId: string;
@@ -271,7 +285,6 @@ export class User {
       id: string;
       username: string;
       primaryEmailAddress: string;
-      emailAddresses: string[];
       resourceId: string;
       isAdmin: boolean;
     }
@@ -284,4 +297,6 @@ export class User {
   }
 
   resource = async () => Resource.resource(this.#context)(this.resourceId);
+
+  emails = async () => UserEmail.mails(this.#context)(this.id);
 }

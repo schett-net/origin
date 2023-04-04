@@ -26,7 +26,7 @@
     }
   },
   "dependencies": {
-    "@snek-at/function": "*",
+    "@snek-at/function": "^0.0.19",
     "@snek-at/function-cli": "*",
     "@snek-at/function-server": "*",
     "@snek-functions/jwt": "^0.0.23",

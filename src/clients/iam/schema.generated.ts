@@ -28,11 +28,6 @@ type ValuesInput_1 = {
     isActive?: t.Boolean;
     isAdmin?: t.Boolean;
 };
-type ValuesInput_1_2 = {
-    emailAddress?: t.String;
-    isPrimary?: t.Boolean;
-    emailConfiguration?: EmailConfigurationInput;
-};
 type EmailConfigurationInput = {
     smtpHost: t.String;
     smtpPort: t.NotSupportedYet;
@@ -40,6 +35,11 @@ type EmailConfigurationInput = {
     username: t.String;
     password: t.String;
     isEnabled: t.Boolean;
+};
+type ValuesInput_1_2 = {
+    emailAddress?: t.String;
+    isPrimary?: t.Boolean;
+    emailConfiguration?: EmailConfigurationInput;
 };
 type SecretInput = {
     scopeId: t.String;
@@ -96,7 +96,7 @@ export class Email {
     resourceId: t.String;
     isPrimary: t.Boolean;
     userId: t.Nullable<t.String>;
-    emailConfiguration: EmailConfiguration;
+    emailConfiguration: t.Nullable<EmailConfiguration>;
     constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.userId = null; this.emailConfiguration = proxy(EmailConfiguration); }
 }
 export class EmailConfiguration {
@@ -189,7 +189,8 @@ export class Mutation {
         userId: t.String;
         emailAddress: t.String;
         isPrimary?: t.Boolean;
-    }) => t.Nullable<Email>;
+        emailConfiguration?: EmailConfigurationInput;
+    }) => Email;
     userEmailDelete: (args: {
         userId: t.String;
         emailId: t.String;

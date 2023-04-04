@@ -1,6 +1,5 @@
 import { defineService, withContext } from "@snek-at/function";
 import { anyLoginRequired, loginRequired } from "@snek-functions/jwt";
-import { sqIAM } from "./clients/iam";
 
 import { Resource } from "./controller/Resource";
 import { User } from "./controller/User";
@@ -23,5 +22,8 @@ export default defineService({
       decorators: [loginRequired],
     }),
     userRegister: withContext(User.register),
+    userEmailCreate: withContext(User.emailCreate),
+    userEmailUpdate: withContext(User.emailUpdate),
+    userEmailDelete: withContext(User.emailDelete),
   },
 });
