@@ -26,7 +26,7 @@ export class User {
         return {
           id: u.id,
           username: u.username,
-          primaryEmailAddress: u.primaryEmailAddress.emailAddress,
+          primaryEmailAddress: u.primaryEmail.emailAddress,
           emailAddresses: u.emails.map((e) => e.emailAddress),
           resourceId: u.resourceId,
           isAdmin: u.isAdmin,
@@ -106,7 +106,7 @@ export class User {
             return {
               id: u.id,
               username: u.username,
-              primaryEmailAddress: u.primaryEmailAddress.emailAddress,
+              primaryEmailAddress: u.primaryEmail.emailAddress,
               emailAddresses: u.emails.map((e) => e.emailAddress),
               resourceId: u.resourceId,
               isAdmin: u.isAdmin,
