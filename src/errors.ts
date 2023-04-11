@@ -120,3 +120,27 @@ export class AuthenticationFailedError extends GraphQLError {
     };
   }
 }
+
+export class ConfigNotFoundError extends GraphQLError {
+  extensions: GraphQLErrorExtensions;
+  constructor(message: string) {
+    super(message);
+    this.extensions = {
+      statusCode: 404,
+      code: "CONFIG_NOT_FOUND",
+      description: "The requested config could not be found",
+    };
+  }
+}
+
+export class ConfigValueNotFoundError extends GraphQLError {
+  extensions: GraphQLErrorExtensions;
+  constructor(message: string) {
+    super(message);
+    this.extensions = {
+      statusCode: 404,
+      code: "CONFIG_VALUE_NOT_FOUND",
+      description: "The requested config value could not be found",
+    };
+  }
+}

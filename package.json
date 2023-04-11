@@ -32,7 +32,7 @@
     "@snek-functions/jwt": "*",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.67"
+    "snek-query": "^0.0.69"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
@@ -43,9 +43,10 @@
   "scripts": {
     "develop": "yarn sf develop",
     "build": "yarn sf build",
-    "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent",
+    "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent && yarn generate-clients:shopify",
     "generate-clients:iam": "yarn snek-query generate https://services.snek.at/iam/graphql --output ./src/clients/iam",
     "generate-clients:authentication": "yarn snek-query generate https://services.snek.at/authentication/graphql --output ./src/clients/authentication",
-    "generate-clients:jaenagent": "yarn snek-query generate https://services.snek.at/jaenagent/graphql --output ./src/clients/jaenagent"
+    "generate-clients:jaenagent": "yarn snek-query generate https://services.snek.at/jaenagent/graphql --output ./src/clients/jaenagent",
+    "generate-clients:shopify": "yarn snek-query generate https://services.snek.at/shopify/graphql --output ./src/clients/shopify"
   }
 }
