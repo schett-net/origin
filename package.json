@@ -26,13 +26,13 @@
     }
   },
   "dependencies": {
-    "@snek-at/function": "^0.0.19",
+    "@snek-at/function": "*",
     "@snek-at/function-cli": "*",
     "@snek-at/function-server": "*",
-    "@snek-functions/jwt": "^0.0.23",
+    "@snek-functions/jwt": "*",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.64"
+    "snek-query": "^0.0.67"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

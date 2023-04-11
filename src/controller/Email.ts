@@ -1,7 +1,7 @@
 import { Context } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
-import { sqIAM } from "../clients/iam";
+import { sqIAM } from "../clients/iam/src";
 
 export class UserEmail {
   id: string;
@@ -148,8 +148,6 @@ export class UserEmail {
         });
       }
 
-      console.log("EmailId", data);
-
       return UserEmail.mail(context)(data, userId);
     };
 
@@ -164,14 +162,6 @@ export class UserEmail {
         emailConfiguration?: UserEmail["emailConfiguration"];
       }
     ) => {
-      console.log("v", {
-        emailId,
-        userId,
-        values: {
-          ...data,
-        },
-      });
-
       const [updatedEmailId, errors] = await sqIAM.mutate(
         (Mutation) => {
           return Mutation.userEmailUpdate({
@@ -188,13 +178,10 @@ export class UserEmail {
       );
 
       if (errors) {
-        console.log(errors);
         throw new GraphQLError(errors[0].message, {
           extensions: errors[0].extensions,
         });
       }
-
-      console.log("EmailId", updatedEmailId);
 
       return UserEmail.mail(context)(updatedEmailId, userId);
     };

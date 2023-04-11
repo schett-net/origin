@@ -1,15 +1,15 @@
-import { Context } from "@snek-at/function";
+import { Context, bindWithContext, withContext } from "@snek-at/function";
 import {
   sq as sqJWT,
-  anyLoginRequired,
   AuthenticationContext,
-  loginRequired,
+  requireAnyAuth,
+  requireUserAuth,
 } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
-import { sqAuthentication } from "../clients/authentication";
+import { sqAuthentication } from "../clients/authentication/src";
 
-import { sqIAM } from "../clients/iam";
-import { Mutation, User as IAMUser } from "../clients/iam/schema.generated";
+import { sqIAM } from "../clients/iam/src";
+import { Mutation, User as IAMUser } from "../clients/iam/src/schema.generated";
 import { ACCESS_RESOURCE_ID } from "../constants";
 import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
@@ -23,7 +23,7 @@ type UserEmailDeleteInput = Parameters<Mutation["userEmailDelete"]>[0];
 type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
 export class User {
-  static user = (context: Context) => async (id: string) => {
+  static user = withContext((context) => async (id: string) => {
     const [data, errors] = await sqIAM.query(
       (Query) => {
         const u = Query.user({ id });
@@ -38,7 +38,7 @@ export class User {
       },
       {
         headers: {
-          Authorization: context.req.headers.authorization || "",
+          Authorization: context.req.headers.authorization,
         },
       }
     );
@@ -50,27 +50,150 @@ export class User {
     }
 
     return new User(context, data);
-  };
+  });
 
-  static register =
-    (context: Context) =>
-    async (
-      resourceId: RegisterInput["resourceId"],
-      values: RegisterInput["values"],
-      skipEmailVerification?: RegisterInput["skipEmailVerification"]
-    ) => {
-      const [{ userId, accessToken }, errors] = await sqIAM.mutate(
-        (Mutation) => {
-          const u = Mutation.userCreate({
-            resourceId,
-            values,
-            skipEmailVerification: skipEmailVerification || false,
+  static register = withContext(
+    (context) =>
+      async (
+        resourceId: RegisterInput["resourceId"],
+        values: RegisterInput["values"],
+        skipEmailVerification?: RegisterInput["skipEmailVerification"]
+      ) => {
+        const [{ userId, accessToken }, errors] = await sqIAM.mutate(
+          (Mutation) => {
+            const u = Mutation.userCreate({
+              resourceId,
+              values,
+              skipEmailVerification: skipEmailVerification || false,
+            });
+
+            return {
+              userId: u.user.id,
+              accessToken: u.accessToken,
+            };
+          },
+          {
+            headers: {
+              Authorization: context.req.headers.authorization,
+            },
+          }
+        );
+
+        if (errors) {
+          throw new GraphQLError(errors[0].message, {
+            extensions: errors[0].extensions,
           });
+        }
 
-          return {
-            userId: u.user.id,
-            accessToken: u.accessToken,
-          };
+        return {
+          user: () => bindWithContext(context, User.user)(userId),
+          accessToken,
+        };
+      }
+  );
+
+  static me = withContext(
+    (context) => async () => {
+      const userId = context.multiAuth[0].userId;
+
+      return bindWithContext(context, User.user)(userId);
+    },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
+
+  static signIn = withContext(
+    (context) =>
+      async (login: string, password: string, resourceId: string) => {
+        const [userId, errors] = await sqAuthentication.mutate(
+          (Mutation) =>
+            Mutation.userAuthenticate({ login, password, resourceId })?.userId
+        );
+
+        if (errors) {
+          throw new AuthenticationFailedError();
+        }
+
+        const unprivilegedTokenPair = await tokenCreate(userId, resourceId);
+
+        // override context authorization
+        context.req.headers[
+          "authorization"
+        ] = `Bearer ${unprivilegedTokenPair.accessToken}`;
+
+        console.log("context.req.headers", context.req.headers);
+
+        // Get user to determine permissions
+        const user = await bindWithContext(context, User.user)(userId);
+
+        console.log("user", user);
+
+        const scope: any = {};
+
+        if (user.isAdmin) {
+          scope.admin = ["*"];
+        }
+
+        // Create privileged access token
+        const tokenPair = await tokenCreate(userId, resourceId, scope);
+
+        // override context authorization
+        context.req.headers[
+          "authorization"
+        ] = `Bearer ${tokenPair.accessToken}`;
+
+        const userWithUpdatedCtx = new User(context, {
+          id: user.id,
+          username: user.username,
+          primaryEmailAddress: user.primaryEmailAddress,
+          resourceId: user.resourceId,
+          isAdmin: user.isAdmin,
+        });
+
+        return {
+          tokenPair: tokenPair,
+          user: userWithUpdatedCtx,
+          me: () => bindWithContext(context, User.me)(),
+        };
+      }
+  );
+
+  static signOut = withContext((context) => (resourceId?: string) => {
+    throw new Error("Not implemented yet");
+  });
+
+  static refresh = withContext(
+    (context) => async (accessToken: string, refreshToken: string) => {
+      const tokenPair = await tokenRefresh({
+        accessToken,
+        refreshToken,
+      });
+
+      // override context authorization
+      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
+
+      return {
+        tokenPair,
+        me: () => bindWithContext(context, User.me)(),
+      };
+    }
+  );
+
+  static ssoSignIn = withContext(
+    (context) => async (resourceId: string) => {
+      const userId = context.multiAuth[0].userId;
+
+      const [usersUnderSameAccount, errors] = await sqIAM.query(
+        (Query) => {
+          return (
+            Query.user({ id: userId }).account?.users.map((u) => {
+              return {
+                userId: u.id,
+                resourceId: u.resourceId,
+              };
+            }) ?? []
+          );
         },
         {
           headers: {
@@ -85,190 +208,77 @@ export class User {
         });
       }
 
-      return {
-        user: () => User.user(context)(userId),
-        accessToken,
-      };
-    };
-
-  static me = (context: Context) => async (resourceId?: string) => {
-    let authenticationInfo = await anyLoginRequired(context);
-
-    if (resourceId) {
-      authenticationInfo = authenticationInfo.filter(
-        (authenticationInfo) =>
-          authenticationInfo.authenticationInfo.resourceId === resourceId
+      const ssoUser = usersUnderSameAccount.find(
+        (u) => u.resourceId === resourceId
       );
+
+      if (ssoUser) {
+        const tokenPair = await tokenCreate(ssoUser.userId, resourceId);
+
+        // override context authorization
+        context.req.headers[
+          "authorization"
+        ] = `Bearer ${tokenPair.accessToken}`;
+
+        return {
+          tokenPair: tokenPair,
+          user: () => bindWithContext(context, User.user)(ssoUser.userId),
+          me: () => bindWithContext(context, User.me)(),
+        };
+      }
+
+      throw new AuthenticationFailedError();
+    },
+    {
+      decorators: [requireUserAuth],
     }
+  );
 
-    return Promise.all(
-      authenticationInfo.map(async ({ authenticationInfo }) =>
-        User.user(context)(authenticationInfo.userId)
-      )
-    );
-  };
+  static emailCreate = withContext(
+    (context) =>
+      async (
+        emailAddress: UserEmailCreateInput["emailAddress"],
+        isPrimary: UserEmailCreateInput["isPrimary"],
+        emailConfiguration: UserEmailCreateInput["emailConfiguration"]
+      ) => {
+        const userId = context.multiAuth[0].userId;
 
-  static signIn =
-    (context: Context) =>
-    async (login: string, password: string, resourceId: string) => {
-      const [userId, errors] = await sqAuthentication.mutate(
-        (Mutation) =>
-          Mutation.userAuthenticate({ login, password, resourceId })?.userId
-      );
-
-      if (errors) {
-        throw new AuthenticationFailedError();
-      }
-
-      const unprivilegedTokenPair = await tokenCreate(userId, resourceId);
-
-      // override context authorization
-      context.req.headers[
-        "authorization"
-      ] = `Bearer ${unprivilegedTokenPair.accessToken}`;
-
-      console.log("context.req.headers", context.req.headers);
-
-      // Get user to determine permissions
-      const user = await User.user(context)(userId);
-
-      console.log("user", user);
-
-      const scope: any = {};
-
-      if (user.isAdmin) {
-        scope.admin = ["*"];
-      }
-
-      // Create privileged access token
-      const tokenPair = await tokenCreate(userId, resourceId, scope);
-
-      // override context authorization
-      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
-
-      const userWithUpdatedCtx = new User(context, {
-        id: user.id,
-        username: user.username,
-        primaryEmailAddress: user.primaryEmailAddress,
-        resourceId: user.resourceId,
-        isAdmin: user.isAdmin,
-      });
-
-      return {
-        tokenPair: tokenPair,
-        user: userWithUpdatedCtx,
-        me: () => User.me(context),
-      };
-    };
-
-  static signOut = (context: Context) => (resourceId?: string) => {
-    throw new Error("Not implemented yet");
-  };
-
-  static refresh =
-    (context: Context) => async (accessToken: string, refreshToken: string) => {
-      const tokenPair = await tokenRefresh({
-        accessToken,
-        refreshToken,
-      });
-
-      // override context authorization
-      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
-
-      return {
-        tokenPair,
-        me: () => User.me(context)(),
-      };
-    };
-
-  static ssoSignIn = (context: Context) => async (resourceId: string) => {
-    const { authenticationInfo } = await loginRequired(context, [
-      ACCESS_RESOURCE_ID,
-    ]);
-
-    const [usersUnderSameAccount, errors] = await sqIAM.query(
-      (Query) => {
-        return (
-          Query.user({ id: authenticationInfo.userId }).account?.users.map(
-            (u) => {
-              return {
-                userId: u.id,
-                resourceId: u.resourceId,
-              };
-            }
-          ) ?? []
-        );
+        return await UserEmail.create(context)(userId, {
+          emailAddress,
+          isPrimary,
+          emailConfiguration,
+        });
       },
-      {
-        headers: {
-          Authorization: context.req.headers.authorization || "",
-        },
-      }
-    );
-
-    if (errors) {
-      throw new GraphQLError(errors[0].message, {
-        extensions: errors[0].extensions,
-      });
+    {
+      decorators: [requireAnyAuth],
     }
+  );
 
-    const ssoUser = usersUnderSameAccount.find(
-      (u) => u.resourceId === resourceId
-    );
+  static emailUpdate = withContext(
+    (context) =>
+      async (
+        emailId: UserEmailUpdateInput["emailId"],
+        values: UserEmailUpdateInput["values"]
+      ) => {
+        const userId = context.multiAuth[0].userId;
 
-    if (ssoUser) {
-      const tokenPair = await tokenCreate(ssoUser.userId, resourceId);
-
-      // override context authorization
-      context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
-
-      return {
-        tokenPair: tokenPair,
-        user: () => User.user(context)(ssoUser.userId),
-        me: () => User.me(context)(),
-      };
+        return await UserEmail.update(context)(emailId, userId, values);
+      },
+    {
+      decorators: [requireAnyAuth],
     }
+  );
 
-    throw new AuthenticationFailedError();
-  };
+  static emailDelete = withContext(
+    (context) => async (emailId: string) => {
+      const userId = context.multiAuth[0].userId;
 
-  static emailCreate =
-    (context: Context) =>
-    async (
-      emailAddress: UserEmailCreateInput["emailAddress"],
-      isPrimary: UserEmailCreateInput["isPrimary"],
-      emailConfiguration: UserEmailCreateInput["emailConfiguration"]
-    ) => {
-      const auth = await anyLoginRequired(context);
-      const userId = auth[0].authenticationInfo.userId;
-
-      return await UserEmail.create(context)(userId, {
-        emailAddress,
-        isPrimary,
-        emailConfiguration,
-      });
-    };
-
-  static emailUpdate =
-    (context: Context) =>
-    async (
-      emailId: UserEmailUpdateInput["emailId"],
-      values: UserEmailUpdateInput["values"]
-    ) => {
-      const auth = await anyLoginRequired(context);
-      const userId = auth[0].authenticationInfo.userId;
-
-      console.log("emailId", emailId, userId, values);
-
-      return await UserEmail.update(context)(emailId, userId, values);
-    };
-
-  static emailDelete = (context: Context) => async (emailId: string) => {
-    const auth = await anyLoginRequired(context);
-    const userId = auth[0].authenticationInfo.userId;
-
-    return await UserEmail.delete(context)(emailId, userId);
-  };
+      return await UserEmail.delete(context)(emailId, userId);
+    },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
 
   #context: Context;
 
@@ -296,7 +306,8 @@ export class User {
     }
   }
 
-  resource = async () => Resource.resource(this.#context)(this.resourceId);
+  resource = async () =>
+    bindWithContext(this.#context, Resource.resource)(this.resourceId);
 
   emails = async () => UserEmail.mails(this.#context)(this.id);
 }

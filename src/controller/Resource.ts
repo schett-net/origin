@@ -1,11 +1,12 @@
-import { Context } from "@snek-at/function";
+import { Context, bindWithContext, withContext } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
-import { sqIAM } from "../clients/iam";
-import { sqJaenAgent } from "../clients/jaenagent";
+import { sqIAM } from "../clients/iam/src";
+import { sqJaenAgent } from "../clients/jaenagent/src";
+import { requireUserAuth } from "@snek-functions/jwt";
 
 export class Resource {
-  static resource = (context: Context) => async (id: string) => {
+  static resource = withContext((context) => async (id: string) => {
     const [resource, errors] = await sqIAM.query(
       (Query) => {
         const r = Query.resource({ id });
@@ -29,7 +30,7 @@ export class Resource {
     }
 
     return new Resource(context, resource);
-  };
+  });
 
   #context: Context;
 
@@ -44,9 +45,9 @@ export class Resource {
     }
   }
 
-  static jaenPublish =
-    (context: Context) => async (resourceId: string, migrationURL: string) => {
-      const r = await Resource.resource(context)(resourceId);
+  static jaenPublish = withContext(
+    (context) => async (resourceId: string, migrationURL: string) => {
+      const r = await bindWithContext(context, Resource.resource)(resourceId);
       const config = await r.config();
 
       if (!config.jaen) {
@@ -96,7 +97,11 @@ export class Resource {
       }
 
       return "Published";
-    };
+    },
+    {
+      decorators: [requireUserAuth],
+    }
+  );
 
   /**
    * Authorization required
@@ -120,7 +125,7 @@ export class Resource {
       },
       {
         headers: {
-          Authorization: this.#context.req.headers.authorization || "",
+          Authorization: this.#context.req.headers.authorization,
         },
       }
     );
@@ -146,7 +151,7 @@ export class Resource {
       },
       {
         headers: {
-          Authorization: this.#context.req.headers.authorization || "",
+          Authorization: this.#context.req.headers.authorization,
         },
       }
     );
