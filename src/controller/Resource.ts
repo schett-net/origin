@@ -106,17 +106,7 @@ export class Resource {
   /**
    * Authorization required
    */
-  async config(): Promise<{
-    jaen?: {
-      repository: string;
-      repositoryCwd?: string;
-    };
-    access?: {
-      baseURL: string;
-      signInURL?: string;
-      signOutURL?: string;
-    };
-  }> {
+  async config(): Promise<Record<string, any>> {
     const [config, errors] = await sqIAM.query(
       (Query) => {
         const c = Query.resource({ id: this.id }).config;
