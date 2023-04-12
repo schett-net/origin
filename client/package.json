@@ -1,0 +1,15 @@
+{
+  "name": "@snek-functions/origin",
+  "version": "0.2.3",
+  "description": "Auto-generated API client",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "snek-query": "*"
+  }
+}
