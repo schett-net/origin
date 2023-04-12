@@ -7,19 +7,28 @@ import { Resource } from "./Resource";
 import { ConfigNotFoundError, ConfigValueNotFoundError } from "../errors";
 
 interface ShopifyProductCreate {
-  handle: string;
+  handle?: string;
   title: string;
-  descriptionHtml: string;
-  metafields: { namespace: string; key: string; value: string; type: string }[];
-  productType: string;
-  tags: string[];
-  variants: {
-    price: string;
-    compareAtPrice: string;
-    sku: string;
-    taxable: boolean;
+  descriptionHtml?: string;
+  metafields?: {
+    namespace: string;
+    key: string;
+    value: string;
+    type: string;
+  }[];
+  productType?: string;
+  tags?: string[];
+  variants?: {
+    price?: string;
+    compareAtPrice?: string;
+    sku?: string;
+    taxable?: boolean;
+    inventoryPolicy?: string;
+    inventoryItem?: {
+      tracked?: boolean;
+    };
   };
-  vendor: string;
+  vendor?: string;
 }
 
 interface ShopifyProductUpdate {
@@ -37,10 +46,14 @@ interface ShopifyProductUpdate {
   productType?: string;
   tags?: string[];
   variants?: {
-    price: string;
-    compareAtPrice: string;
-    sku: string;
-    taxable: boolean;
+    price?: string;
+    compareAtPrice?: string;
+    sku?: string;
+    taxable?: boolean;
+    inventoryPolicy?: string;
+    inventoryItem?: {
+      tracked?: boolean;
+    };
   };
   vendor?: string;
 }

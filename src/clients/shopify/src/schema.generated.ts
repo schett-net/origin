@@ -7,14 +7,14 @@ type ShopifyIdInput = {
     accessToken: t.String;
 };
 type ShopifyProductInputInput = {
-    handle: t.String;
+    handle?: t.String;
     title: t.String;
-    descriptionHtml: t.String;
-    metafields: MetafieldsInput[];
-    productType: t.String;
-    tags: t.String[];
-    variants: VariantsInput;
-    vendor: t.String;
+    descriptionHtml?: t.String;
+    metafields?: MetafieldsInput[];
+    productType?: t.String;
+    tags?: t.String[];
+    variants?: VariantsInput;
+    vendor?: t.String;
 };
 type MetafieldsInput = {
     namespace: t.String;
@@ -23,10 +23,15 @@ type MetafieldsInput = {
     type: t.String;
 };
 type VariantsInput = {
-    price: t.String;
-    compareAtPrice: t.String;
-    sku: t.String;
-    taxable: t.Boolean;
+    price?: t.String;
+    compareAtPrice?: t.String;
+    sku?: t.String;
+    taxable?: t.Boolean;
+    inventoryPolicy?: t.String;
+    inventoryItem?: InventoryItemInput;
+};
+type InventoryItemInput = {
+    tracked?: t.Boolean;
 };
 type UpdateShopifyProductInputInput = {
     id: t.String;
@@ -46,10 +51,15 @@ type MetafieldsInput_1 = {
     type: t.String;
 };
 type VariantsInput_1 = {
-    price: t.String;
-    compareAtPrice: t.String;
-    sku: t.String;
-    taxable: t.Boolean;
+    price?: t.String;
+    compareAtPrice?: t.String;
+    sku?: t.String;
+    taxable?: t.Boolean;
+    inventoryPolicy?: t.String;
+    inventoryItem?: InventoryItemInput_1;
+};
+type InventoryItemInput_1 = {
+    tracked?: t.Boolean;
 };
 
 export class Query {
