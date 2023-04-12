@@ -17,9 +17,9 @@ import { Resource } from "./Resource";
 import { UserEmail } from "./Email";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
+type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];
 
 type UserEmailCreateInput = Parameters<Mutation["userEmailCreate"]>[0];
-type UserEmailDeleteInput = Parameters<Mutation["userEmailDelete"]>[0];
 type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
 export class User {
@@ -51,6 +51,62 @@ export class User {
 
     return new User(context, data);
   });
+
+  static update = withContext(
+    (context) => async (id: string, values: UserUpdateValues) => {
+      const [userId, errors] = await sqIAM.mutate(
+        (Mutation) => {
+          const user = Mutation.userUpdate({ id, values });
+
+          return user.id;
+        },
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
+
+      return bindWithContext(context, User.user)(userId);
+    },
+    {
+      decorators: [requireUserAuth],
+    }
+  );
+
+  static delete = withContext(
+    (context) => async (id: string) => {
+      const [_, errors] = await sqIAM.mutate(
+        (Mutation) => {
+          const user = Mutation.userDelete({ id });
+
+          return user.id;
+        },
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
+
+      return true;
+    },
+    {
+      decorators: [requireUserAuth],
+    }
+  );
 
   static register = withContext(
     (context) =>

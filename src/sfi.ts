@@ -17,6 +17,8 @@ export default defineService({
     userRefresh: User.refresh,
     userSSO: User.ssoSignIn,
     userRegister: User.register,
+    userUpdate: User.update,
+    userDelete: User.delete,
     userEmailCreate: User.emailCreate,
     userEmailUpdate: User.emailUpdate,
     userEmailDelete: User.emailDelete,

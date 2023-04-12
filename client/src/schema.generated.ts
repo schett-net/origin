@@ -9,6 +9,12 @@ type ValuesInputInput = {
     accountId?: t.String;
     isActive?: t.Boolean;
 };
+type ValuesInput_1Input = {
+    username?: t.String;
+    password?: t.String;
+    isActive?: t.Boolean;
+    isAdmin?: t.Boolean;
+};
 type EmailConfigurationInputInput = {
     smtpHost: t.String;
     smtpPort: t.NotSupportedYet;
@@ -156,6 +162,13 @@ export class Mutation {
         values: ValuesInputInput;
         skipEmailVerification?: t.Boolean;
     }) => UserRegister;
+    userUpdate: (args: {
+        id: t.String;
+        values: ValuesInput_1Input;
+    }) => User;
+    userDelete: (args: {
+        id: t.String;
+    }) => t.Boolean;
     userEmailCreate: (args: {
         emailAddress: t.String;
         isPrimary?: t.Boolean;
@@ -184,7 +197,7 @@ export class Mutation {
         resourceId: t.String;
         id: t.String;
     }) => t.String;
-    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; }
+    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; }
 }
 export class UserSignIn {
     __typename: t.String;
