@@ -1,7 +1,7 @@
 import { bindWithContext, withContext } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
-import { requireUserAuth } from "@snek-functions/jwt";
+import { requireAdminForResource } from "@snek-functions/jwt";
 import { sqJaenAgent } from "../clients/jaenagent/src";
 import { Resource } from "./Resource";
 
@@ -60,7 +60,7 @@ export class Jaen {
       return "Published";
     },
     {
-      decorators: [requireUserAuth],
+      decorators: [requireAdminForResource],
     }
   );
 }
