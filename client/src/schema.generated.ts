@@ -8,12 +8,22 @@ type ValuesInputInput = {
     password: t.String;
     accountId?: t.String;
     isActive?: t.Boolean;
+    details?: DetailsInputInput;
+};
+type DetailsInputInput = {
+    firstName?: t.String;
+    lastName?: t.String;
 };
 type ValuesInput_1Input = {
     username?: t.String;
     password?: t.String;
     isActive?: t.Boolean;
     isAdmin?: t.Boolean;
+    details?: DetailsInput_1Input;
+};
+type DetailsInput_1Input = {
+    firstName?: t.String;
+    lastName?: t.String;
 };
 type EmailConfigurationInputInput = {
     smtpHost: t.String;
@@ -108,9 +118,12 @@ export class User {
     username: t.String;
     primaryEmailAddress: t.String;
     isAdmin: t.Boolean;
+    isActive: t.Boolean;
+    createdAt: t.String;
     resource: Resource;
     emails: UserEmail[];
-    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmailAddress = ""; this.isAdmin = false; this.resource = proxy(Resource); this.emails = arrayProxy(UserEmail); }
+    details: Details;
+    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmailAddress = ""; this.isAdmin = false; this.isActive = false; this.createdAt = ""; this.resource = proxy(Resource); this.emails = arrayProxy(UserEmail); this.details = proxy(Details); }
 }
 export class Resource {
     __typename: t.String;
@@ -145,6 +158,12 @@ export class EmailConfiguration {
     password: t.String;
     isEnabled: t.Boolean;
     constructor() { this.__typename = ""; this.smtpHost = ""; this.smtpPort = null; this.secure = false; this.username = ""; this.password = ""; this.isEnabled = false; }
+}
+export class Details {
+    __typename: t.String;
+    firstName: t.Nullable<t.String>;
+    lastName: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
 }
 export class Mutation {
     __typename: t.String;

@@ -20,12 +20,22 @@ type ValuesInput = {
     password: t.String;
     accountId?: t.String;
     isActive?: t.Boolean;
+    details?: DetailsInput;
+};
+type DetailsInput = {
+    firstName?: t.String;
+    lastName?: t.String;
 };
 type ValuesInput_1 = {
     username?: t.String;
     password?: t.String;
     isActive?: t.Boolean;
     isAdmin?: t.Boolean;
+    details?: DetailsInput_1;
+};
+type DetailsInput_1 = {
+    firstName?: t.String;
+    lastName?: t.String;
 };
 type EmailConfigurationInput = {
     smtpHost: t.String;
@@ -82,12 +92,14 @@ export class User {
     accountId: t.String;
     isAdmin: t.Boolean;
     passwordHash: t.String;
+    createdAt: t.String;
     primaryEmail: Email;
     emails: Email[];
     account: Account;
     resource: Resource;
     tokens: Token[];
-    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.primaryEmail = proxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); }
+    details: t.Nullable<Details>;
+    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.createdAt = ""; this.primaryEmail = proxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); this.details = proxy(Details); }
 }
 export class Email {
     __typename: t.String;
@@ -148,6 +160,12 @@ export class Token {
     name: t.String;
     expiresAt: t.Nullable<t.String>;
     constructor() { this.__typename = ""; this.id = ""; this.name = ""; this.expiresAt = null; }
+}
+export class Details {
+    __typename: t.String;
+    firstName: t.Nullable<t.String>;
+    lastName: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
 }
 export class UserTokenPayload {
     __typename: t.String;

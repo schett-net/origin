@@ -14,7 +14,7 @@ import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
 import { sqIAM } from "../clients/iam/src";
-import { Mutation, User as IAMUser } from "../clients/iam/src/schema.generated";
+import { Mutation } from "../clients/iam/src/schema.generated";
 import { ACCESS_RESOURCE_ID } from "../constants";
 import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
@@ -45,6 +45,8 @@ export class User {
             primaryEmailAddress: u.primaryEmail.emailAddress,
             resourceId: u.resourceId,
             isAdmin: u.isAdmin,
+            createdAt: u.createdAt,
+            isActive: u.isActive,
           };
         },
         {
@@ -79,6 +81,8 @@ export class User {
             primaryEmailAddress: u.primaryEmail.emailAddress,
             resourceId: u.resourceId,
             isAdmin: u.isAdmin,
+            createdAt: u.createdAt,
+            isActive: u.isActive,
           }));
         },
         {
@@ -254,6 +258,8 @@ export class User {
           primaryEmailAddress: user.primaryEmailAddress,
           resourceId: user.resourceId,
           isAdmin: user.isAdmin,
+          createdAt: user.createdAt,
+          isActive: user.isActive,
         });
 
         return {
@@ -391,6 +397,8 @@ export class User {
   username: string;
   primaryEmailAddress: string;
   isAdmin: boolean;
+  isActive: boolean;
+  createdAt: string;
 
   private resourceId: string;
 
@@ -402,6 +410,8 @@ export class User {
       primaryEmailAddress: string;
       resourceId: string;
       isAdmin: boolean;
+      isActive: boolean;
+      createdAt: string;
     }
   ) {
     this.#context = context;
@@ -415,4 +425,30 @@ export class User {
     bindWithContext(this.#context, Resource.resource)(this.resourceId);
 
   emails = async () => UserEmail.mails(this.#context)(this.id);
+
+  details = async () => {
+    const [details, errors] = await sqIAM.query(
+      (Query) => {
+        const details = Query.user({ id: this.id }).details;
+
+        return {
+          firstName: details?.firstName || undefined,
+          lastName: details?.lastName || undefined,
+        };
+      },
+      {
+        headers: {
+          Authorization: this.#context.req.headers.authorization,
+        },
+      }
+    );
+
+    if (errors) {
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
+    }
+
+    return details;
+  };
 }
