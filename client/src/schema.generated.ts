@@ -86,6 +86,12 @@ type InventoryItemInput_1 = {
 
 export class Query {
     __typename: t.String;
+    user: (args: {
+        id: t.String;
+    }) => User;
+    allUser: (args: {
+        resourceId: t.String;
+    }) => User[];
     userMe: User;
     resource: (args: {
         id: t.String;
@@ -94,7 +100,7 @@ export class Query {
         resourceId: t.String;
     }) => t.String[];
     version: t.String;
-    constructor() { this.__typename = ""; this.userMe = proxy(User); this.resource = fnProxy(Resource); this.shopifyAllProductId = () => []; this.version = ""; }
+    constructor() { this.__typename = ""; this.user = fnProxy(User); this.allUser = fnArrayProxy(User); this.userMe = proxy(User); this.resource = fnProxy(Resource); this.shopifyAllProductId = () => []; this.version = ""; }
 }
 export class User {
     __typename: t.String;

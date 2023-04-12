@@ -1,9 +1,14 @@
-import { Context, bindWithContext, withContext } from "@snek-at/function";
+import {
+  Context,
+  bindWithContext,
+  decorator,
+  withContext,
+} from "@snek-at/function";
 import {
   sq as sqJWT,
   AuthenticationContext,
   requireAnyAuth,
-  requireUserAuth,
+  requireAuthForResource,
 } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
@@ -22,35 +27,79 @@ type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];
 type UserEmailCreateInput = Parameters<Mutation["userEmailCreate"]>[0];
 type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
+const requireUserAuthOnAccessResource = decorator((c) => {
+  const context = c as Context<AuthenticationContext>;
+  return requireAuthForResource(context, [ACCESS_RESOURCE_ID]);
+});
+
 export class User {
-  static user = withContext((context) => async (id: string) => {
-    const [data, errors] = await sqIAM.query(
-      (Query) => {
-        const u = Query.user({ id });
+  static user = withContext(
+    (context) => async (id: string) => {
+      const [data, errors] = await sqIAM.query(
+        (Query) => {
+          const u = Query.user({ id });
 
-        return {
-          id: u.id,
-          username: u.username,
-          primaryEmailAddress: u.primaryEmail.emailAddress,
-          resourceId: u.resourceId,
-          isAdmin: u.isAdmin,
-        };
-      },
-      {
-        headers: {
-          Authorization: context.req.headers.authorization,
+          return {
+            id: u.id,
+            username: u.username,
+            primaryEmailAddress: u.primaryEmail.emailAddress,
+            resourceId: u.resourceId,
+            isAdmin: u.isAdmin,
+          };
         },
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
       }
-    );
 
-    if (errors) {
-      throw new GraphQLError(errors[0].message, {
-        extensions: errors[0].extensions,
-      });
+      return new User(context, data);
+    },
+    {
+      decorators: [requireAnyAuth],
     }
+  );
 
-    return new User(context, data);
-  });
+  static users = withContext(
+    (context) => async (resourceId: string) => {
+      const [data, errors] = await sqIAM.query(
+        (Query) => {
+          const users = Query.allUser({ resourceId });
+
+          return users.map((u) => ({
+            id: u.id,
+            username: u.username,
+            primaryEmailAddress: u.primaryEmail.emailAddress,
+            resourceId: u.resourceId,
+            isAdmin: u.isAdmin,
+          }));
+        },
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
+
+      return data.map((d) => new User(context, d));
+    },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
 
   static update = withContext(
     (context) => async (id: string, values: UserUpdateValues) => {
@@ -76,7 +125,7 @@ export class User {
       return bindWithContext(context, User.user)(userId);
     },
     {
-      decorators: [requireUserAuth],
+      decorators: [requireAnyAuth],
     }
   );
 
@@ -104,7 +153,7 @@ export class User {
       return true;
     },
     {
-      decorators: [requireUserAuth],
+      decorators: [requireAnyAuth],
     }
   );
 
@@ -286,7 +335,7 @@ export class User {
       throw new AuthenticationFailedError();
     },
     {
-      decorators: [requireUserAuth],
+      decorators: [requireUserAuthOnAccessResource],
     }
   );
 

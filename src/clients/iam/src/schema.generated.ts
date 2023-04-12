@@ -11,7 +11,6 @@ type FilterInput = {
 };
 type FilterInput_1 = {
     ids?: t.String[];
-    resourceId?: t.String;
     isActive?: t.Boolean;
     isAdmin?: t.Boolean;
 };
@@ -61,6 +60,7 @@ export class Query {
         filter?: FilterInput;
     }) => User;
     allUser: (args?: {
+        resourceId?: t.String;
         filter?: FilterInput_1;
     }) => User[];
     resource: (args: {

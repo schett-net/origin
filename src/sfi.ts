@@ -7,6 +7,8 @@ import { Shopify } from "./controller/Shopify";
 
 export default defineService({
   Query: {
+    user: User.user,
+    allUser: User.users,
     userMe: User.me,
     resource: Resource.resource,
     shopifyAllProductId: Shopify.allProductId,

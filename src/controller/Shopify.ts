@@ -1,6 +1,6 @@
 import { Context, bindWithContext, withContext } from "@snek-at/function";
 import { GraphQLError } from "graphql";
-import { requireAdminForResource, requireUserAuth } from "@snek-functions/jwt";
+import { requireAdminForResource } from "@snek-functions/jwt";
 
 import { sqShopify } from "../clients/shopify/src";
 import { Resource } from "./Resource";
