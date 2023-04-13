@@ -90,12 +90,12 @@ export class UserEmail {
           isPrimary: email.isPrimary,
           emailConfiguration: email.emailConfiguration
             ? {
-                smtpHost: email.emailConfiguration?.smtpHost,
-                smtpPort: email.emailConfiguration?.smtpPort,
-                secure: email.emailConfiguration?.secure,
-                username: email.emailConfiguration?.username,
-                password: email.emailConfiguration?.password,
-                isEnabled: email.emailConfiguration?.isEnabled,
+                smtpHost: email.emailConfiguration.smtpHost,
+                smtpPort: email.emailConfiguration.smtpPort,
+                secure: email.emailConfiguration.secure,
+                username: email.emailConfiguration.username,
+                password: email.emailConfiguration.password,
+                isEnabled: email.emailConfiguration.isEnabled,
               }
             : undefined,
         }));
