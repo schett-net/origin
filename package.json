@@ -18,7 +18,7 @@
     "@snek-functions/jwt": "*",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.74"
+    "snek-query": "^0.0.75"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
