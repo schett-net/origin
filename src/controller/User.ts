@@ -47,6 +47,10 @@ export class User {
             isAdmin: u.isAdmin,
             createdAt: u.createdAt,
             isActive: u.isActive,
+            details: {
+              firstName: u.details?.firstName || undefined,
+              lastName: u.details?.lastName || undefined,
+            },
           };
         },
         {
@@ -83,6 +87,10 @@ export class User {
             isAdmin: u.isAdmin,
             createdAt: u.createdAt,
             isActive: u.isActive,
+            details: {
+              firstName: u.details?.firstName || undefined,
+              lastName: u.details?.lastName || undefined,
+            },
           }));
         },
         {
@@ -91,6 +99,8 @@ export class User {
           },
         }
       );
+
+      console.log(data);
 
       if (errors) {
         throw new GraphQLError(errors[0].message, {
@@ -136,11 +146,7 @@ export class User {
   static delete = withContext(
     (context) => async (id: string) => {
       const [_, errors] = await sqIAM.mutate(
-        (Mutation) => {
-          const user = Mutation.userDelete({ id });
-
-          return user.id;
-        },
+        (Mutation) => Mutation.userDelete({ id }),
         {
           headers: {
             Authorization: context.req.headers.authorization,
@@ -260,6 +266,7 @@ export class User {
           isAdmin: user.isAdmin,
           createdAt: user.createdAt,
           isActive: user.isActive,
+          details: user.details,
         });
 
         return {
@@ -399,6 +406,10 @@ export class User {
   isAdmin: boolean;
   isActive: boolean;
   createdAt: string;
+  details: {
+    firstName?: string;
+    lastName?: string;
+  };
 
   private resourceId: string;
 
@@ -412,6 +423,10 @@ export class User {
       isAdmin: boolean;
       isActive: boolean;
       createdAt: string;
+      details?: {
+        firstName?: string;
+        lastName?: string;
+      };
     }
   ) {
     this.#context = context;
@@ -426,29 +441,31 @@ export class User {
 
   emails = async () => UserEmail.mails(this.#context)(this.id);
 
-  details = async () => {
-    const [details, errors] = await sqIAM.query(
-      (Query) => {
-        const details = Query.user({ id: this.id }).details;
+  // details = async () => {
+  //   console.log("Details", this.#context.req.headers.authorization);
 
-        return {
-          firstName: details?.firstName || undefined,
-          lastName: details?.lastName || undefined,
-        };
-      },
-      {
-        headers: {
-          Authorization: this.#context.req.headers.authorization,
-        },
-      }
-    );
+  //   const [details, errors] = await sqIAM.query(
+  //     (Query) => {
+  //       const details = Query.user({ id: this.id }).details;
 
-    if (errors) {
-      throw new GraphQLError(errors[0].message, {
-        extensions: errors[0].extensions,
-      });
-    }
+  //       return {
+  //         firstName: details?.firstName || undefined,
+  //         lastName: details?.lastName || undefined,
+  //       };
+  //     },
+  //     {
+  //       headers: {
+  //         Authorization: this.#context.req.headers.authorization,
+  //       },
+  //     }
+  //   );
 
-    return details;
-  };
+  //   if (errors) {
+  //     throw new GraphQLError(errors[0].message, {
+  //       extensions: errors[0].extensions,
+  //     });
+  //   }
+
+  //   return details;
+  // };
 }
