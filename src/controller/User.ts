@@ -42,7 +42,7 @@ export class User {
           return {
             id: u.id,
             username: u.username,
-            primaryEmailAddress: u.primaryEmail.emailAddress,
+            primaryEmailAddress: u.email().emailAddress,
             resourceId: u.resourceId,
             isAdmin: u.isAdmin,
             createdAt: u.createdAt,
@@ -82,7 +82,7 @@ export class User {
           return users.map((u) => ({
             id: u.id,
             username: u.username,
-            primaryEmailAddress: u.primaryEmail.emailAddress,
+            primaryEmailAddress: u.email().emailAddress,
             resourceId: u.resourceId,
             isAdmin: u.isAdmin,
             createdAt: u.createdAt,

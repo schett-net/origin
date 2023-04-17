@@ -1,6 +1,10 @@
 
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
+enum LookupTypeInput {
+    USER_ID = "USER_ID",
+    EMAIL_ID = "EMAIL_ID"
+}
 enum ACCESS_REFRESH {
     access = "access",
     refresh = "refresh"
@@ -8,6 +12,10 @@ enum ACCESS_REFRESH {
 
 type FilterInput = {
     resourceId?: t.String;
+};
+type FilterInput_1_2 = {
+    emailId?: t.String;
+    emailAddress?: t.String;
 };
 type FilterInput_1 = {
     ids?: t.String[];
@@ -73,6 +81,10 @@ export class Query {
         resourceId?: t.String;
         filter?: FilterInput_1;
     }) => User[];
+    emailLookup: (args: {
+        id: t.String;
+        type: LookupTypeInput;
+    }) => t.Nullable<EmailLookup>;
     resource: (args: {
         id: t.String;
     }) => Resource;
@@ -81,7 +93,7 @@ export class Query {
         token: t.String;
     }) => UserTokenPayload;
     version: t.String;
-    constructor() { this.__typename = ""; this.user = fnProxy(User); this.allUser = fnArrayProxy(User); this.resource = fnProxy(Resource); this.allResource = arrayProxy(Resource); this.userTokenVerify = fnProxy(UserTokenPayload); this.version = ""; }
+    constructor() { this.__typename = ""; this.user = fnProxy(User); this.allUser = fnArrayProxy(User); this.emailLookup = fnProxy(EmailLookup); this.resource = fnProxy(Resource); this.allResource = arrayProxy(Resource); this.userTokenVerify = fnProxy(UserTokenPayload); this.version = ""; }
 }
 export class User {
     __typename: t.String;
@@ -93,13 +105,15 @@ export class User {
     isAdmin: t.Boolean;
     passwordHash: t.String;
     createdAt: t.String;
-    primaryEmail: Email;
+    email: (args?: {
+        filter?: FilterInput_1_2;
+    }) => Email;
     emails: Email[];
     account: Account;
     resource: Resource;
     tokens: Token[];
     details: t.Nullable<Details>;
-    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.createdAt = ""; this.primaryEmail = proxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); this.details = proxy(Details); }
+    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.createdAt = ""; this.email = fnProxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); this.details = proxy(Details); }
 }
 export class Email {
     __typename: t.String;
@@ -167,6 +181,14 @@ export class Details {
     lastName: t.Nullable<t.String>;
     constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
 }
+export class EmailLookup {
+    __typename: t.String;
+    id: t.String;
+    emailAddress: t.String;
+    isPrimary: t.Boolean;
+    userId: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.isPrimary = false; this.userId = null; }
+}
 export class UserTokenPayload {
     __typename: t.String;
     type: t.Nullable<ACCESS_REFRESH>;
@@ -194,7 +216,7 @@ export class Mutation {
     }) => User;
     userDelete: (args: {
         id: t.String;
-    }) => t.NotSupportedYet;
+    }) => t.Boolean;
     userTokenCreate: (args: {
         userId: t.String;
         name: t.String;
@@ -227,7 +249,7 @@ export class Mutation {
     deployAuthentication: (args?: {
         resourceId?: t.String;
     }) => Deploy[];
-    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(UserCreate); this.userUpdate = fnProxy(User); this.userDelete = () => null; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); }
+    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(UserCreate); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); }
 }
 export class UserCreate {
     __typename: t.String;

@@ -9,7 +9,7 @@ export class Query {
         login: t.String;
         resourceId: t.String;
         password: t.String;
-    }) => t.Nullable<UserAuthenticate>;
+    }) => UserAuthenticate;
     constructor() { this.__typename = ""; this.userAuthenticate = fnProxy(UserAuthenticate); }
 }
 export class UserAuthenticate {
@@ -23,7 +23,7 @@ export class Mutation {
         login: t.String;
         resourceId: t.String;
         password: t.String;
-    }) => t.Nullable<UserAuthenticate>;
+    }) => UserAuthenticate;
     constructor() { this.__typename = ""; this.userAuthenticate = fnProxy(UserAuthenticate); }
 }
 
