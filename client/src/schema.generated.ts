@@ -1,6 +1,11 @@
 
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
+enum EmailAddressTypeInputInput {
+    EMAIL_ADDRESS = "EMAIL_ADDRESS",
+    EMAIL_ID = "EMAIL_ID",
+    USER_ID = "USER_ID"
+}
 
 type ValuesInputInput = {
     emailAddress: t.String;
@@ -93,6 +98,20 @@ type VariantsInput_1 = {
 type InventoryItemInput_1 = {
     tracked?: t.Boolean;
 };
+type EmailEnvelopeInputInput = {
+    from?: EmailAddressInputInput;
+    to?: EmailAddressInputInput[];
+    subject?: t.String;
+    replyTo?: EmailAddressInputInput;
+};
+type EmailAddressInputInput = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+type TemplateInputInput = {
+    id: t.String;
+    values: t.NotSupportedYet;
+};
 
 export class Query {
     __typename: t.String;
@@ -120,10 +139,16 @@ export class User {
     isAdmin: t.Boolean;
     isActive: t.Boolean;
     createdAt: t.String;
+    details: Details;
     resource: Resource;
     emails: UserEmail[];
-    details: Details;
-    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmailAddress = ""; this.isAdmin = false; this.isActive = false; this.createdAt = ""; this.resource = proxy(Resource); this.emails = arrayProxy(UserEmail); this.details = proxy(Details); }
+    constructor() { this.__typename = ""; this.id = ""; this.username = ""; this.primaryEmailAddress = ""; this.isAdmin = false; this.isActive = false; this.createdAt = ""; this.details = proxy(Details); this.resource = proxy(Resource); this.emails = arrayProxy(UserEmail); }
+}
+export class Details {
+    __typename: t.String;
+    firstName: t.Nullable<t.String>;
+    lastName: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
 }
 export class Resource {
     __typename: t.String;
@@ -158,12 +183,6 @@ export class EmailConfiguration {
     password: t.String;
     isEnabled: t.Boolean;
     constructor() { this.__typename = ""; this.smtpHost = ""; this.smtpPort = null; this.secure = false; this.username = ""; this.password = ""; this.isEnabled = false; }
-}
-export class Details {
-    __typename: t.String;
-    firstName: t.Nullable<t.String>;
-    lastName: t.Nullable<t.String>;
-    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
 }
 export class Mutation {
     __typename: t.String;
@@ -222,7 +241,12 @@ export class Mutation {
         resourceId: t.String;
         id: t.String;
     }) => t.String;
-    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; }
+    mailpressMailSchedule: (args: {
+        envelope: EmailEnvelopeInputInput;
+        body?: t.String;
+        template?: TemplateInputInput;
+    }) => t.String;
+    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; }
 }
 export class UserSignIn {
     __typename: t.String;

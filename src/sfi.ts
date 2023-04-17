@@ -4,6 +4,7 @@ import { Resource } from "./controller/Resource";
 import { User } from "./controller/User";
 import { Jaen } from "./controller/Jaen";
 import { Shopify } from "./controller/Shopify";
+import { Mailpress } from "./controller/Mailpress";
 
 export default defineService({
   Query: {
@@ -28,5 +29,6 @@ export default defineService({
     shopifyProductCreate: Shopify.productCreate,
     shopifyProductUpdate: Shopify.productUpdate,
     shopifyProductDelete: Shopify.productDelete,
+    mailpressMailSchedule: Mailpress.mailSchedule,
   },
 });

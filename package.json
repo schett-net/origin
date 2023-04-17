@@ -30,10 +30,11 @@
     "develop": "yarn sf develop",
     "build": "yarn sf build",
     "build:client": "yarn snek-query generate https://services.snek.at/origin/graphql --output ./client --name @snek-functions/origin",
-    "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent && yarn generate-clients:shopify",
+    "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent && yarn generate-clients:shopify && yarn generate-clients:mailpress",
     "generate-clients:iam": "yarn snek-query generate https://services.snek.at/iam/graphql --output ./src/clients/iam",
     "generate-clients:authentication": "yarn snek-query generate https://services.snek.at/authentication/graphql --output ./src/clients/authentication",
     "generate-clients:jaenagent": "yarn snek-query generate https://services.snek.at/jaenagent/graphql --output ./src/clients/jaenagent",
-    "generate-clients:shopify": "yarn snek-query generate https://services.snek.at/shopify/graphql --output ./src/clients/shopify"
+    "generate-clients:shopify": "yarn snek-query generate https://services.snek.at/shopify/graphql --output ./src/clients/shopify",
+    "generate-clients:mailpress": "yarn snek-query generate https://services.snek.at/mailpress/graphql --output ./src/clients/mailpress"
   }
 }
