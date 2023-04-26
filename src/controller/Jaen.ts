@@ -8,6 +8,8 @@ import { Resource } from "./Resource";
 export class Jaen {
   static publish = withContext(
     (context) => async (resourceId: string, migrationURL: string) => {
+      console.log("publishing jaen");
+
       const r = await bindWithContext(context, Resource.resource)(resourceId);
       const config = await r.config();
 
