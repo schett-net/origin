@@ -171,7 +171,7 @@ export class UserEmail {
         isPrimary?: UserEmail["isPrimary"];
         config?: {
           isEnabled?: EmailConfig["isEnabled"];
-          externalCredentialId: string;
+          externalCredentialId?: string;
         };
       }
     ) => {

@@ -5,7 +5,6 @@ import {
   withContext,
 } from "@snek-at/function";
 import {
-  sq as sqJWT,
   AuthenticationContext,
   requireAnyAuth,
   requireAuthForResource,
@@ -13,23 +12,19 @@ import {
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
+import { asEnumKey } from "snek-query";
 import { sqIAM } from "../clients/iam/src";
 import {
-  EmailConfig,
-  ExternalCredential,
   GOOGLE_MICROSOFTInput,
   Mutation,
-  OAuthCredential,
   OAuthCredentialInput,
-  SMTPCredential,
   SMTPCredentialInput,
 } from "../clients/iam/src/schema.generated";
 import { ACCESS_RESOURCE_ID } from "../constants";
 import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
-import { Resource } from "./Resource";
 import { UserEmail } from "./Email";
-import { asEnumKey } from "snek-query";
+import { Resource } from "./Resource";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
 type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];

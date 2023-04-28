@@ -53,14 +53,18 @@ type DetailsInput_1 = {
   firstName?: t.String;
   lastName?: t.String;
 };
-type EmailConfigInputInput = {
+type EmailConfigCreateInput = {
   externalCredentialId: t.String;
   isEnabled?: t.Boolean;
 };
 type ValuesInput_1_2 = {
   emailAddress?: t.String;
   isPrimary?: t.Boolean;
-  config?: EmailConfigInputInput;
+  config?: EmailConfigUpdateInput;
+};
+type EmailConfigUpdateInput = {
+  externalCredentialId?: t.String;
+  isEnabled?: t.Boolean;
 };
 export type SMTPCredentialInput = {
   host: t.String;
@@ -344,7 +348,7 @@ export class Mutation {
     userId: t.String;
     emailAddress: t.String;
     isPrimary?: t.Boolean;
-    config?: EmailConfigInputInput;
+    config?: EmailConfigCreateInput;
   }) => Email;
   userEmailDelete: (args: { userId: t.String; emailId: t.String }) => t.Boolean;
   userEmailUpdate: (args: {
