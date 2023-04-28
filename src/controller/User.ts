@@ -14,12 +14,22 @@ import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
 import { sqIAM } from "../clients/iam/src";
-import { Mutation } from "../clients/iam/src/schema.generated";
+import {
+  EmailConfig,
+  ExternalCredential,
+  GOOGLE_MICROSOFTInput,
+  Mutation,
+  OAuthCredential,
+  OAuthCredentialInput,
+  SMTPCredential,
+  SMTPCredentialInput,
+} from "../clients/iam/src/schema.generated";
 import { ACCESS_RESOURCE_ID } from "../constants";
 import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
 import { Resource } from "./Resource";
 import { UserEmail } from "./Email";
+import { asEnumKey } from "snek-query";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
 type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];
@@ -391,6 +401,43 @@ export class User {
 
       return await UserEmail.delete(context)(emailId, userId);
     },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
+
+  static externalCredentialCreate = withContext(
+    (context) =>
+      async (smtp?: SMTPCredentialInput, oauth?: OAuthCredentialInput) => {
+        const userId = context.multiAuth[0].userId;
+
+        const [externalCredentialId, errors] = await sqIAM.mutate(
+          (Mutation) =>
+            Mutation.userExternalCredentialCreate({
+              userId,
+              smtp,
+              oauth: oauth
+                ? {
+                    ...oauth,
+                    provider: asEnumKey(GOOGLE_MICROSOFTInput, "google"),
+                  }
+                : undefined,
+            }).id,
+          {
+            headers: {
+              Authorization: context.req.headers.authorization,
+            },
+          }
+        );
+
+        if (errors) {
+          throw new GraphQLError(errors[0].message, {
+            extensions: errors[0].extensions,
+          });
+        }
+
+        return externalCredentialId;
+      },
     {
       decorators: [requireAnyAuth],
     }

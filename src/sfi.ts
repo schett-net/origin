@@ -28,6 +28,7 @@ export default defineService(
       userEmailCreate: User.emailCreate,
       userEmailUpdate: User.emailUpdate,
       userEmailDelete: User.emailDelete,
+      userExternalCredentialCreate: User.externalCredentialCreate,
       jaenPublish: Jaen.publish,
       shopifyProductCreate: Shopify.productCreate,
       shopifyProductUpdate: Shopify.productUpdate,
