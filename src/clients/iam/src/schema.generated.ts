@@ -5,9 +5,17 @@ enum LookupTypeInput {
     USER_ID = "USER_ID",
     EMAIL_ID = "EMAIL_ID"
 }
+enum GOOGLE_MICROSOFT {
+    google = "google",
+    microsoft = "microsoft"
+}
 enum ACCESS_REFRESH {
     access = "access",
     refresh = "refresh"
+}
+enum GOOGLE_MICROSOFTInput {
+    google = "google",
+    microsoft = "microsoft"
 }
 
 type FilterInput = {
@@ -28,6 +36,7 @@ type ValuesInput = {
     password: t.String;
     accountId?: t.String;
     isActive?: t.Boolean;
+    isAdmin?: t.Boolean;
     details?: DetailsInput;
 };
 type DetailsInput = {
@@ -45,18 +54,26 @@ type DetailsInput_1 = {
     firstName?: t.String;
     lastName?: t.String;
 };
-type EmailConfigurationInput = {
-    smtpHost: t.String;
-    smtpPort: t.NotSupportedYet;
-    secure: t.Boolean;
-    username: t.String;
-    password: t.String;
-    isEnabled: t.Boolean;
+type EmailConfigInputInput = {
+    externalCredentialId: t.String;
+    isEnabled?: t.Boolean;
 };
 type ValuesInput_1_2 = {
     emailAddress?: t.String;
     isPrimary?: t.Boolean;
-    emailConfiguration?: EmailConfigurationInput;
+    config?: EmailConfigInputInput;
+};
+type SMTPCredentialInput = {
+    host: t.String;
+    port: t.NotSupportedYet;
+    username: t.String;
+    password: t.String;
+    secure: t.Boolean;
+};
+type OAuthCredentialInput = {
+    provider: GOOGLE_MICROSOFTInput;
+    accessToken: t.String;
+    refreshToken: t.String;
 };
 type SecretInput = {
     scopeId: t.String;
@@ -113,7 +130,11 @@ export class User {
     resource: Resource;
     tokens: Token[];
     details: t.Nullable<Details>;
-    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.createdAt = ""; this.email = fnProxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); this.details = proxy(Details); }
+    externalCredential: (args: {
+        id: t.String;
+    }) => ExternalCredential;
+    externalCredentials: ExternalCredential[];
+    constructor() { this.__typename = ""; this.isActive = false; this.id = ""; this.username = ""; this.resourceId = ""; this.accountId = ""; this.isAdmin = false; this.passwordHash = ""; this.createdAt = ""; this.email = fnProxy(Email); this.emails = arrayProxy(Email); this.account = proxy(Account); this.resource = proxy(Resource); this.tokens = arrayProxy(Token); this.details = proxy(Details); this.externalCredential = fnProxy(ExternalCredential); this.externalCredentials = arrayProxy(ExternalCredential); }
 }
 export class Email {
     __typename: t.String;
@@ -122,18 +143,38 @@ export class Email {
     resourceId: t.String;
     isPrimary: t.Boolean;
     userId: t.Nullable<t.String>;
-    emailConfiguration: t.Nullable<EmailConfiguration>;
-    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.userId = null; this.emailConfiguration = proxy(EmailConfiguration); }
+    config: t.Nullable<EmailConfig>;
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.userId = null; this.config = proxy(EmailConfig); }
 }
-export class EmailConfiguration {
+export class EmailConfig {
     __typename: t.String;
-    smtpHost: t.String;
-    smtpPort: t.NotSupportedYet;
-    secure: t.Boolean;
+    id: t.String;
+    isEnabled: t.Boolean;
+    externalCredential: ExternalCredential;
+    constructor() { this.__typename = ""; this.id = ""; this.isEnabled = false; this.externalCredential = proxy(ExternalCredential); }
+}
+export class ExternalCredential {
+    __typename: t.String;
+    id: t.String;
+    smtp: t.Nullable<SMTPCredential>;
+    oauth: t.Nullable<OAuthCredential>;
+    constructor() { this.__typename = ""; this.id = ""; this.smtp = proxy(SMTPCredential); this.oauth = proxy(OAuthCredential); }
+}
+export class SMTPCredential {
+    __typename: t.String;
+    host: t.String;
+    port: t.NotSupportedYet;
     username: t.String;
     password: t.String;
-    isEnabled: t.Boolean;
-    constructor() { this.__typename = ""; this.smtpHost = ""; this.smtpPort = null; this.secure = false; this.username = ""; this.password = ""; this.isEnabled = false; }
+    secure: t.Boolean;
+    constructor() { this.__typename = ""; this.host = ""; this.port = null; this.username = ""; this.password = ""; this.secure = false; }
+}
+export class OAuthCredential {
+    __typename: t.String;
+    provider: t.Nullable<GOOGLE_MICROSOFT>;
+    accessToken: t.String;
+    refreshToken: t.String;
+    constructor() { this.__typename = ""; this.provider = null; this.accessToken = ""; this.refreshToken = ""; }
 }
 export class Account {
     __typename: t.String;
@@ -229,7 +270,7 @@ export class Mutation {
         userId: t.String;
         emailAddress: t.String;
         isPrimary?: t.Boolean;
-        emailConfiguration?: EmailConfigurationInput;
+        config?: EmailConfigInputInput;
     }) => Email;
     userEmailDelete: (args: {
         userId: t.String;
@@ -240,6 +281,11 @@ export class Mutation {
         emailId: t.String;
         values: ValuesInput_1_2;
     }) => Email;
+    userExternalCredentialCreate: (args: {
+        userId: t.String;
+        smtp?: SMTPCredentialInput;
+        oauth?: OAuthCredentialInput;
+    }) => ExternalCredential;
     secretCreate: (args: {
         secret: SecretInput;
     }) => SecretObject;
@@ -249,7 +295,7 @@ export class Mutation {
     deployAuthentication: (args?: {
         resourceId?: t.String;
     }) => Deploy[];
-    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(UserCreate); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); }
+    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(UserCreate); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.userExternalCredentialCreate = fnProxy(ExternalCredential); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); }
 }
 export class UserCreate {
     __typename: t.String;

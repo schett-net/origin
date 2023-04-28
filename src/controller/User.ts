@@ -100,8 +100,6 @@ export class User {
         }
       );
 
-      console.log(data);
-
       if (errors) {
         throw new GraphQLError(errors[0].message, {
           extensions: errors[0].extensions,
@@ -357,14 +355,14 @@ export class User {
       async (
         emailAddress: UserEmailCreateInput["emailAddress"],
         isPrimary: UserEmailCreateInput["isPrimary"],
-        emailConfiguration: UserEmailCreateInput["emailConfiguration"]
+        config: UserEmailCreateInput["config"]
       ) => {
         const userId = context.multiAuth[0].userId;
 
         return await UserEmail.create(context)(userId, {
           emailAddress,
           isPrimary,
-          emailConfiguration,
+          config,
         });
       },
     {

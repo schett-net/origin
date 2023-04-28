@@ -2,25 +2,28 @@ import { Context } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
 import { sqIAM } from "../clients/iam/src";
+import { ExternalCredential } from "../clients/iam/src/schema.generated";
+
+interface EmailConfig {
+  id: string;
+  isEnabled: boolean;
+  externalCredential?: {
+    smtp?: ExternalCredential["smtp"] | null;
+    oauth?: ExternalCredential["oauth"] | null;
+  };
+}
 
 export class UserEmail {
   id: string;
   emailAddress: string;
   isPrimary: boolean;
-  emailConfiguration?: {
-    smtpHost: string;
-    smtpPort: number;
-    secure: boolean;
-    username: string;
-    password: string;
-    isEnabled: boolean;
-  };
+  config?: EmailConfig;
 
   constructor(data: {
     id: string;
     emailAddress: string;
     isPrimary: boolean;
-    emailConfiguration?: UserEmail["emailConfiguration"];
+    config?: UserEmail["config"];
   }) {
     for (const key in data) {
       this[key] = data[key];
@@ -38,14 +41,14 @@ export class UserEmail {
           id: email.id,
           emailAddress: email.emailAddress,
           isPrimary: email.isPrimary,
-          emailConfiguration: email.emailConfiguration
+          config: email.config
             ? {
-                smtpHost: email.emailConfiguration?.smtpHost,
-                smtpPort: email.emailConfiguration?.smtpPort,
-                secure: email.emailConfiguration?.secure,
-                username: email.emailConfiguration?.username,
-                password: email.emailConfiguration?.password,
-                isEnabled: email.emailConfiguration?.isEnabled,
+                id: email.config?.id,
+                isEnabled: email.config?.isEnabled,
+                externalCredential: {
+                  smtp: email.config?.externalCredential?.smtp || undefined,
+                  oauth: email.config?.externalCredential?.oauth || undefined,
+                },
               }
             : undefined,
         }));
@@ -88,14 +91,14 @@ export class UserEmail {
           id: email.id,
           emailAddress: email.emailAddress,
           isPrimary: email.isPrimary,
-          emailConfiguration: email.emailConfiguration
+          config: email.config
             ? {
-                smtpHost: email.emailConfiguration.smtpHost,
-                smtpPort: email.emailConfiguration.smtpPort,
-                secure: email.emailConfiguration.secure,
-                username: email.emailConfiguration.username,
-                password: email.emailConfiguration.password,
-                isEnabled: email.emailConfiguration.isEnabled,
+                id: email.config?.id,
+                isEnabled: email.config?.isEnabled,
+                externalCredential: {
+                  smtp: email.config?.externalCredential?.smtp || undefined,
+                  oauth: email.config?.externalCredential?.oauth || undefined,
+                },
               }
             : undefined,
         }));
@@ -107,13 +110,17 @@ export class UserEmail {
       }
     );
 
+    console.log(`data: ${JSON.stringify(data)}`);
+
     if (errors) {
       throw new GraphQLError(errors[0].message, {
         extensions: errors[0].extensions,
       });
     }
 
-    return data.map((email) => new UserEmail(email));
+    const rtn = data.map((email) => new UserEmail(email));
+
+    return rtn;
   };
 
   static create =
@@ -123,7 +130,10 @@ export class UserEmail {
       values: {
         emailAddress: UserEmail["emailAddress"];
         isPrimary?: UserEmail["isPrimary"];
-        emailConfiguration?: UserEmail["emailConfiguration"];
+        config?: {
+          isEnabled?: EmailConfig["isEnabled"];
+          externalCredentialId: string;
+        };
       }
     ) => {
       const [data, errors] = await sqIAM.mutate(
@@ -132,7 +142,7 @@ export class UserEmail {
             userId,
             emailAddress: values.emailAddress,
             isPrimary: values.isPrimary,
-            emailConfiguration: values.emailConfiguration,
+            config: values.config,
           }).id;
         },
         {
@@ -159,7 +169,10 @@ export class UserEmail {
       data: {
         emailAddress?: UserEmail["emailAddress"];
         isPrimary?: UserEmail["isPrimary"];
-        emailConfiguration?: UserEmail["emailConfiguration"];
+        config?: {
+          isEnabled?: EmailConfig["isEnabled"];
+          externalCredentialId: string;
+        };
       }
     ) => {
       const [updatedEmailId, errors] = await sqIAM.mutate(

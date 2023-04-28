@@ -18,11 +18,14 @@
     "@snek-functions/jwt": "*",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "snek-query": "^0.0.75"
+    "passport": "^0.6.0",
+    "passport-outlook": "^3.0.0",
+    "snek-query": "^0.0.80"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/passport": "^1.0.12",
     "commitizen": "^4.2.5",
     "git-cz": "^4.9.0"
   },
@@ -31,7 +34,7 @@
     "build": "yarn sf build",
     "build:client": "yarn snek-query generate https://services.snek.at/origin/graphql --output ./client --name @snek-functions/origin",
     "generate-clients": "yarn generate-clients:iam && yarn generate-clients:authentication && yarn generate-clients:jaenagent && yarn generate-clients:shopify && yarn generate-clients:mailpress",
-    "generate-clients:iam": "yarn snek-query generate https://services.snek.at/iam/graphql --output ./src/clients/iam",
+    "generate-clients:iam": "yarn snek-query generate http://localhost:4050/graphql --output ./src/clients/iam",
     "generate-clients:authentication": "yarn snek-query generate https://services.snek.at/authentication/graphql --output ./src/clients/authentication",
     "generate-clients:jaenagent": "yarn snek-query generate https://services.snek.at/jaenagent/graphql --output ./src/clients/jaenagent",
     "generate-clients:shopify": "yarn snek-query generate https://services.snek.at/shopify/graphql --output ./src/clients/shopify",
