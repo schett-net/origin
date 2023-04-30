@@ -17,15 +17,13 @@
     "@snek-at/function-server": "*",
     "@snek-functions/jwt": "*",
     "cors": "^2.8.5",
+    "http-proxy-middleware": "^2.0.6",
     "jsonwebtoken": "^9.0.0",
-    "passport": "^0.6.0",
-    "passport-outlook": "^3.0.0",
     "snek-query": "^0.0.80"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
     "@types/jsonwebtoken": "^9.0.1",
-    "@types/passport": "^1.0.12",
     "commitizen": "^4.2.5",
     "git-cz": "^4.9.0"
   },

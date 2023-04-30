@@ -1,12 +1,14 @@
 import { defineService } from "@snek-at/function";
 import bodyParser from "body-parser";
 
-import { Resource } from "./controller/Resource";
-import { User } from "./controller/User";
 import { Jaen } from "./controller/Jaen";
-import { Shopify } from "./controller/Shopify";
 import { Mailpress } from "./controller/Mailpress";
+import { Resource } from "./controller/Resource";
+import { Shopify } from "./controller/Shopify";
+import { User } from "./controller/User";
 import { Webhook } from "./controller/Webhook";
+
+import { configureOAuth } from "./oauth";
 
 export default defineService(
   {
@@ -52,6 +54,8 @@ export default defineService(
           await Webhook.processRequest({ req, res });
         }
       );
+
+      configureOAuth(app);
     },
   }
 );
