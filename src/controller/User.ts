@@ -15,7 +15,7 @@ import { sqAuthentication } from "../clients/authentication/src";
 import { asEnumKey } from "snek-query";
 import { sqIAM } from "../clients/iam/src";
 import {
-  GOOGLE_MICROSOFTInput,
+  OAuthProviderInput,
   Mutation,
   OAuthCredentialInput,
   SMTPCredentialInput,
@@ -414,7 +414,7 @@ export class User {
               oauth: oauth
                 ? {
                     ...oauth,
-                    provider: asEnumKey(GOOGLE_MICROSOFTInput, "google"),
+                    provider: asEnumKey(OAuthProviderInput, oauth.provider),
                   }
                 : undefined,
             }).id,

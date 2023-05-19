@@ -4,17 +4,17 @@ enum LookupTypeInput {
   USER_ID = "USER_ID",
   EMAIL_ID = "EMAIL_ID",
 }
-enum GOOGLE_MICROSOFT {
+export enum OAuthProvider {
   google = "google",
-  microsoft = "microsoft",
+  azure = "azure",
 }
 enum ACCESS_REFRESH {
   access = "access",
   refresh = "refresh",
 }
-export enum GOOGLE_MICROSOFTInput {
+export enum OAuthProviderInput {
   google = "google",
-  microsoft = "microsoft",
+  azure = "azure",
 }
 
 type FilterInput = {
@@ -74,7 +74,7 @@ export type SMTPCredentialInput = {
   secure: t.Boolean;
 };
 export type OAuthCredentialInput = {
-  provider: GOOGLE_MICROSOFTInput;
+  provider: OAuthProviderInput;
   accessToken: t.String;
   refreshToken: t.String;
 };
@@ -212,7 +212,7 @@ export class SMTPCredential {
 }
 export class OAuthCredential {
   __typename: t.String;
-  provider: t.Nullable<GOOGLE_MICROSOFT>;
+  provider: t.Nullable<OAuthProvider>;
   accessToken: t.String;
   refreshToken: t.String;
   constructor() {
