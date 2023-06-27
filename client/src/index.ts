@@ -6,7 +6,7 @@ type TokenPair = Pick<_TokenPair, "accessToken" | "refreshToken">;
 export const sq = makeSnekQuery(
   { Query, Mutation },
   {
-    apiURL: "https://services.snek.at/origin/graphql",
+    apiURL: "https://services.snek.at/graphql",
     middlewares: [
       ({ context }) => {
         const tokenPair = getTokenPair();

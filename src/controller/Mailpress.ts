@@ -6,6 +6,11 @@ import { Mutation } from "../clients/mailpress/src/schema.generated";
 type MailScheduleArgs = Parameters<Mutation["mailSchedule"]>[0];
 type MailScheduleResult = ReturnType<Mutation["mailSchedule"]>;
 
+const apiURL =
+  process.env.NODE_ENV === "production"
+    ? "http://mailpress:3000/graphql"
+    : "https://services.snek.at/mailpress/graphql";
+
 export class Mailpress {
   static mailSchedule = withContext<
     (
@@ -31,7 +36,7 @@ export class Mailpress {
       headers.set("Authorization", context.req.headers.authorization);
     }
 
-    const data = await fetch("https://services.snek.at/mailpress/graphql", {
+    const data = await fetch(apiURL, {
       method: "POST",
       headers,
       body: JSON.stringify({
