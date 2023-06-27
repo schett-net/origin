@@ -12,6 +12,9 @@ enum EmailAddressTypeInput {
     USER_ID = "USER_ID"
 }
 
+type ContextInput = {
+    envelope: EmailEnvelopeInput;
+};
 type EmailEnvelopeInput = {
     from?: EmailAddressInput;
     to?: EmailAddressInput[];
@@ -30,8 +33,9 @@ type EmailTemplateInput = {
     content: t.String;
     variables?: t.NotSupportedYet;
     envelope?: EmailEnvelopeInput;
+    verifyReplyTo?: t.Boolean;
     authorizationUser?: AuthorizationUserInput;
-    confirmationTemplateId?: t.String;
+    linkedEmailTemplates?: EmailTemplateInput[];
 };
 type AuthorizationUserInput = {
     id: t.String;
@@ -52,9 +56,10 @@ export class EmailTemplate {
     content: t.String;
     variables: t.Nullable<t.NotSupportedYet>;
     envelope: t.Nullable<EmailEnvelope>;
+    verifyReplyTo: t.Nullable<t.Boolean>;
     authorizationUser: t.Nullable<AuthorizationUser>;
-    confirmationTemplateId: t.Nullable<t.String>;
-    constructor() { this.__typename = ""; this.content = ""; this.variables = null; this.envelope = proxy(EmailEnvelope); this.authorizationUser = proxy(AuthorizationUser); this.confirmationTemplateId = null; }
+    linkedEmailTemplates: t.Nullable<EmailTemplate>[];
+    constructor() { this.__typename = ""; this.content = ""; this.variables = null; this.envelope = proxy(EmailEnvelope); this.verifyReplyTo = null; this.authorizationUser = proxy(AuthorizationUser); this.linkedEmailTemplates = arrayProxy(EmailTemplate); }
 }
 export class EmailEnvelope {
     __typename: t.String;
@@ -81,6 +86,7 @@ export class Mutation {
     mailSchedule: (args: {
         envelope: EmailEnvelopeInput;
         body?: t.String;
+        bodyHTML?: t.String;
         template?: TemplateInput;
     }) => t.String;
     createTemplate: (args: {
