@@ -16,6 +16,7 @@ export class Mailpress {
     (
       envelope: MailScheduleArgs["envelope"],
       body: MailScheduleArgs["body"],
+      bodyHTML: MailScheduleArgs["bodyHTML"],
       template: MailScheduleArgs["template"]
     ) => Promise<MailScheduleResult>
   >((context) => async () => {

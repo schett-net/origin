@@ -1,6 +1,14 @@
 
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
+enum OAuthProvider {
+    google = "google",
+    azure = "azure"
+}
+enum OAuthProviderInputInput {
+    google = "google",
+    azure = "azure"
+}
 enum EmailAddressTypeInputInput {
     EMAIL_ADDRESS = "EMAIL_ADDRESS",
     EMAIL_ID = "EMAIL_ID",
@@ -13,6 +21,7 @@ type ValuesInputInput = {
     password: t.String;
     accountId?: t.String;
     isActive?: t.Boolean;
+    isAdmin?: t.Boolean;
     details?: DetailsInputInput;
 };
 type DetailsInputInput = {
@@ -30,18 +39,30 @@ type DetailsInput_1Input = {
     firstName?: t.String;
     lastName?: t.String;
 };
-type EmailConfigurationInputInput = {
-    smtpHost: t.String;
-    smtpPort: t.NotSupportedYet;
-    secure: t.Boolean;
-    username: t.String;
-    password: t.String;
-    isEnabled: t.Boolean;
+type EmailConfigCreateInputInput = {
+    externalCredentialId: t.String;
+    isEnabled?: t.Boolean;
 };
 type ValuesInput_1_2Input = {
     emailAddress?: t.String;
     isPrimary?: t.Boolean;
-    emailConfiguration?: EmailConfigurationInputInput;
+    config?: EmailConfigUpdateInputInput;
+};
+type EmailConfigUpdateInputInput = {
+    externalCredentialId?: t.String;
+    isEnabled?: t.Boolean;
+};
+type SMTPCredentialInputInput = {
+    host: t.String;
+    port: t.NotSupportedYet;
+    username: t.String;
+    password: t.String;
+    secure: t.Boolean;
+};
+type OAuthCredentialInputInput = {
+    provider: OAuthProviderInputInput;
+    accessToken: t.String;
+    refreshToken: t.String;
 };
 type ShopifyProductCreateInput = {
     handle?: t.String;
@@ -171,18 +192,37 @@ export class UserEmail {
     id: t.String;
     emailAddress: t.String;
     isPrimary: t.Boolean;
-    emailConfiguration: t.Nullable<EmailConfiguration>;
-    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.isPrimary = false; this.emailConfiguration = proxy(EmailConfiguration); }
+    config: t.Nullable<EmailConfig>;
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.isPrimary = false; this.config = proxy(EmailConfig); }
 }
-export class EmailConfiguration {
+export class EmailConfig {
     __typename: t.String;
-    smtpHost: t.String;
-    smtpPort: t.NotSupportedYet;
-    secure: t.Boolean;
+    id: t.String;
+    isEnabled: t.Boolean;
+    externalCredential: t.Nullable<ExternalCredential>;
+    constructor() { this.__typename = ""; this.id = ""; this.isEnabled = false; this.externalCredential = proxy(ExternalCredential); }
+}
+export class ExternalCredential {
+    __typename: t.String;
+    smtp: t.Nullable<SMTPCredential>;
+    oauth: t.Nullable<OAuthCredential>;
+    constructor() { this.__typename = ""; this.smtp = proxy(SMTPCredential); this.oauth = proxy(OAuthCredential); }
+}
+export class SMTPCredential {
+    __typename: t.String;
+    host: t.String;
+    port: t.NotSupportedYet;
     username: t.String;
     password: t.String;
-    isEnabled: t.Boolean;
-    constructor() { this.__typename = ""; this.smtpHost = ""; this.smtpPort = null; this.secure = false; this.username = ""; this.password = ""; this.isEnabled = false; }
+    secure: t.Boolean;
+    constructor() { this.__typename = ""; this.host = ""; this.port = null; this.username = ""; this.password = ""; this.secure = false; }
+}
+export class OAuthCredential {
+    __typename: t.String;
+    provider: t.Nullable<OAuthProvider>;
+    accessToken: t.String;
+    refreshToken: t.String;
+    constructor() { this.__typename = ""; this.provider = null; this.accessToken = ""; this.refreshToken = ""; }
 }
 export class Mutation {
     __typename: t.String;
@@ -216,7 +256,7 @@ export class Mutation {
     userEmailCreate: (args: {
         emailAddress: t.String;
         isPrimary?: t.Boolean;
-        emailConfiguration?: EmailConfigurationInputInput;
+        config?: EmailConfigCreateInputInput;
     }) => UserEmail;
     userEmailUpdate: (args: {
         emailId: t.String;
@@ -225,6 +265,10 @@ export class Mutation {
     userEmailDelete: (args: {
         emailId: t.String;
     }) => t.Boolean;
+    userExternalCredentialCreate: (args?: {
+        smtp?: SMTPCredentialInputInput;
+        oauth?: OAuthCredentialInputInput;
+    }) => t.String;
     jaenPublish: (args: {
         resourceId: t.String;
         migrationURL: t.String;
@@ -244,9 +288,10 @@ export class Mutation {
     mailpressMailSchedule: (args: {
         envelope: EmailEnvelopeInputInput;
         body?: t.String;
+        bodyHTML?: t.String;
         template?: TemplateInputInput;
     }) => t.String;
-    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; }
+    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; }
 }
 export class UserSignIn {
     __typename: t.String;
