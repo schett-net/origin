@@ -38,6 +38,7 @@ type ValuesInput_1Input = {
 type DetailsInput_1Input = {
     firstName?: t.String;
     lastName?: t.String;
+    avatarFile: t.NotSupportedYet;
 };
 type EmailConfigCreateInputInput = {
     externalCredentialId: t.String;
@@ -169,7 +170,8 @@ export class Details {
     __typename: t.String;
     firstName: t.Nullable<t.String>;
     lastName: t.Nullable<t.String>;
-    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; }
+    avatarURL: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; this.avatarURL = null; }
 }
 export class Resource {
     __typename: t.String;
