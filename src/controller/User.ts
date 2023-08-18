@@ -55,6 +55,7 @@ export class User {
             details: {
               firstName: u.details?.firstName || undefined,
               lastName: u.details?.lastName || undefined,
+              avatarURL: u.details?.avatarURL || undefined,
             },
           };
         },
@@ -449,6 +450,7 @@ export class User {
   details: {
     firstName?: string;
     lastName?: string;
+    avatarURL?: string;
   };
 
   private resourceId: string;
