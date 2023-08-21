@@ -38,7 +38,7 @@ type ValuesInput_1Input = {
 type DetailsInput_1Input = {
     firstName?: t.String;
     lastName?: t.String;
-    avatarFile: t.NotSupportedYet;
+    avatarFile?: t.String;
 };
 type EmailConfigCreateInputInput = {
     externalCredentialId: t.String;
@@ -194,8 +194,9 @@ export class UserEmail {
     id: t.String;
     emailAddress: t.String;
     isPrimary: t.Boolean;
+    isVerified: t.Boolean;
     config: t.Nullable<EmailConfig>;
-    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.isPrimary = false; this.config = proxy(EmailConfig); }
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.isPrimary = false; this.isVerified = false; this.config = proxy(EmailConfig); }
 }
 export class EmailConfig {
     __typename: t.String;
@@ -228,6 +229,16 @@ export class OAuthCredential {
 }
 export class Mutation {
     __typename: t.String;
+    passwordReset: (args: {
+        emailAddress: t.String;
+        resourceId: t.String;
+    }) => t.Boolean;
+    passwordResetConfirm: (args: {
+        emailAddress: t.String;
+        resourceId: t.String;
+        password: t.String;
+        otp: t.String;
+    }) => t.Boolean;
     userSignIn: (args: {
         login: t.String;
         password: t.String;
@@ -260,6 +271,13 @@ export class Mutation {
         isPrimary?: t.Boolean;
         config?: EmailConfigCreateInputInput;
     }) => UserEmail;
+    userEmailConfirm: (args: {
+        emailId: t.String;
+        otp: t.String;
+    }) => UserEmailConfirm;
+    userEmailConfirmationResend: (args: {
+        emailId: t.String;
+    }) => Email;
     userEmailUpdate: (args: {
         emailId: t.String;
         values: ValuesInput_1_2Input;
@@ -293,7 +311,7 @@ export class Mutation {
         bodyHTML?: t.String;
         template?: TemplateInputInput;
     }) => t.String;
-    constructor() { this.__typename = ""; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; }
+    constructor() { this.__typename = ""; this.passwordReset = () => false; this.passwordResetConfirm = () => false; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userSSO = fnProxy(UserSSO); this.userRegister = fnProxy(UserRegister); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailConfirm = fnProxy(UserEmailConfirm); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; }
 }
 export class UserSignIn {
     __typename: t.String;
@@ -326,5 +344,36 @@ export class UserRegister {
     user: User;
     accessToken: t.String;
     constructor() { this.__typename = ""; this.user = proxy(User); this.accessToken = ""; }
+}
+export class UserEmailConfirm {
+    __typename: t.String;
+    id: t.String;
+    isVerified: t.Boolean;
+    constructor() { this.__typename = ""; this.id = ""; this.isVerified = false; }
+}
+export class Email {
+    __typename: t.String;
+    id: t.String;
+    emailAddress: t.String;
+    resourceId: t.String;
+    isPrimary: t.Boolean;
+    isVerified: t.Boolean;
+    userId: t.Nullable<t.String>;
+    config: t.Nullable<EmailConfig_1>;
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.isVerified = false; this.userId = null; this.config = proxy(EmailConfig_1); }
+}
+export class EmailConfig_1 {
+    __typename: t.String;
+    id: t.String;
+    isEnabled: t.Boolean;
+    externalCredential: ExternalCredential_1;
+    constructor() { this.__typename = ""; this.id = ""; this.isEnabled = false; this.externalCredential = proxy(ExternalCredential_1); }
+}
+export class ExternalCredential_1 {
+    __typename: t.String;
+    id: t.String;
+    smtp: t.Nullable<SMTPCredential>;
+    oauth: t.Nullable<OAuthCredential>;
+    constructor() { this.__typename = ""; this.id = ""; this.smtp = proxy(SMTPCredential); this.oauth = proxy(OAuthCredential); }
 }
 

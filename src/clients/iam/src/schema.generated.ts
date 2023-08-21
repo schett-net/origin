@@ -52,11 +52,19 @@ type ValuesInput_1 = {
 type DetailsInput_1 = {
   firstName?: t.String;
   lastName?: t.String;
-  avatarFile: t.NotSupportedYet;
+  avatarFile?: t.String;
 };
 type EmailConfigCreateInput = {
   externalCredentialId: t.String;
   isEnabled?: t.Boolean;
+};
+type RedirectURLInput = {
+  success?: t.String;
+  failure?: t.String;
+};
+type RedirectURLInput_1 = {
+  success?: t.String;
+  failure?: t.String;
 };
 type ValuesInput_1_2 = {
   emailAddress?: t.String;
@@ -159,6 +167,7 @@ export class Email {
   emailAddress: t.String;
   resourceId: t.String;
   isPrimary: t.Boolean;
+  isVerified: t.Boolean;
   userId: t.Nullable<t.String>;
   config: t.Nullable<EmailConfig>;
   constructor() {
@@ -167,6 +176,7 @@ export class Email {
     this.emailAddress = "";
     this.resourceId = "";
     this.isPrimary = false;
+    this.isVerified = false;
     this.userId = null;
     this.config = proxy(EmailConfig);
   }
@@ -352,6 +362,13 @@ export class Mutation {
     emailAddress: t.String;
     isPrimary?: t.Boolean;
     config?: EmailConfigCreateInput;
+    redirectURL?: RedirectURLInput;
+  }) => Email;
+  userEmailConfirm: (args: { emailId: t.String; otp: t.String }) => Email;
+  userEmailConfirmationResend: (args: {
+    userId: t.String;
+    emailId: t.String;
+    redirectURL?: RedirectURLInput_1;
   }) => Email;
   userEmailDelete: (args: { userId: t.String; emailId: t.String }) => t.Boolean;
   userEmailUpdate: (args: {
@@ -369,6 +386,16 @@ export class Mutation {
     genericObject: GenericObjectInput;
   }) => GenericObject;
   deployAuthentication: (args?: { resourceId?: t.String }) => Deploy[];
+  passwordReset: (args: {
+    emailAddress: t.String;
+    resourceId: t.String;
+  }) => t.String;
+  passwordResetConfirm: (args: {
+    emailAddress: t.String;
+    resourceId: t.String;
+    password: t.String;
+    otp: t.String;
+  }) => t.String;
   constructor() {
     this.__typename = "";
     this.resourceCreate = fnProxy(Resource);
@@ -378,12 +405,16 @@ export class Mutation {
     this.userTokenCreate = () => "";
     this.userTokenDelete = () => false;
     this.userEmailCreate = fnProxy(Email);
+    this.userEmailConfirm = fnProxy(Email);
+    this.userEmailConfirmationResend = fnProxy(Email);
     this.userEmailDelete = () => false;
     this.userEmailUpdate = fnProxy(Email);
     this.userExternalCredentialCreate = fnProxy(ExternalCredential);
     this.secretCreate = fnProxy(SecretObject);
     this.genericObjectCreate = fnProxy(GenericObject);
     this.deployAuthentication = fnArrayProxy(Deploy);
+    this.passwordReset = () => "";
+    this.passwordResetConfirm = () => "";
   }
 }
 export class UserCreate {

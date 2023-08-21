@@ -1,6 +1,6 @@
 {
   "name": "@snek-functions/origin",
-  "version": "0.4.0",
+  "version": "0.6.2",
   "description": "Auto-generated API client",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

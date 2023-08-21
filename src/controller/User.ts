@@ -30,6 +30,7 @@ type RegisterInput = Parameters<Mutation["userCreate"]>[0];
 type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];
 
 type UserEmailCreateInput = Parameters<Mutation["userEmailCreate"]>[0];
+type UserEmailConfirmInput = Parameters<Mutation["userEmailConfirm"]>[0];
 type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
 const requireUserAuthOnAccessResource = decorator((c) => {
@@ -241,12 +242,8 @@ export class User {
           "authorization"
         ] = `Bearer ${unprivilegedTokenPair.accessToken}`;
 
-        console.log("context.req.headers", context.req.headers);
-
         // Get user to determine permissions
         const user = await bindWithContext(context, User.user)(userId);
-
-        console.log("user", user);
 
         const scope: any = {};
 
@@ -279,6 +276,66 @@ export class User {
           me: () => bindWithContext(context, User.me)(),
         };
       }
+  );
+
+  static passwordReset = withContext(
+    (context) => async (emailAddress: string, resourceId: string) => {
+      const [_, errors] = await sqIAM.mutate(
+        (Mutation) => Mutation.passwordReset({ emailAddress, resourceId }),
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
+
+      return true;
+    },
+    {
+      decorators: [],
+    }
+  );
+
+  static passwordResetConfirm = withContext(
+    (context) =>
+      async (
+        emailAddress: string,
+        resourceId: string,
+        password: string,
+        otp: string
+      ) => {
+        const [_, errors] = await sqIAM.mutate(
+          (Mutation) =>
+            Mutation.passwordResetConfirm({
+              emailAddress,
+              resourceId,
+              password,
+              otp,
+            }),
+          {
+            headers: {
+              Authorization: context.req.headers.authorization,
+            },
+          }
+        );
+
+        if (errors) {
+          throw new GraphQLError(errors[0].message, {
+            extensions: errors[0].extensions,
+          });
+        }
+
+        return true;
+      },
+    {
+      decorators: [],
+    }
   );
 
   static signOut = withContext((context) => (resourceId?: string) => {
@@ -371,6 +428,17 @@ export class User {
           config,
         });
       },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
+
+  static userEmailConfirmationResend = withContext(
+    (context) => async (emailId: string) => {
+      const userId = context.multiAuth[0].userId;
+
+      return await UserEmail.confirmationResend(context)(emailId, userId);
+    },
     {
       decorators: [requireAnyAuth],
     }

@@ -17,12 +17,14 @@ export class UserEmail {
   id: string;
   emailAddress: string;
   isPrimary: boolean;
+  isVerified: boolean;
   config?: EmailConfig;
 
   constructor(data: {
     id: string;
     emailAddress: string;
     isPrimary: boolean;
+    isVerified: boolean;
     config?: UserEmail["config"];
   }) {
     for (const key in data) {
@@ -41,6 +43,7 @@ export class UserEmail {
           id: email.id,
           emailAddress: email.emailAddress,
           isPrimary: email.isPrimary,
+          isVerified: email.isVerified,
           config: email.config
             ? {
                 id: email.config?.id,
@@ -91,6 +94,7 @@ export class UserEmail {
           id: email.id,
           emailAddress: email.emailAddress,
           isPrimary: email.isPrimary,
+          isVerified: email.isVerified,
           config: email.config
             ? {
                 id: email.config?.id,
@@ -159,6 +163,51 @@ export class UserEmail {
       }
 
       return UserEmail.mail(context)(data, userId);
+    };
+
+  static confirm = async (emailId: string, otp: string) => {
+    const [_, errors] = await sqIAM.mutate((Mutation) => {
+      return Mutation.userEmailConfirm({
+        emailId,
+        otp,
+      }).id;
+    });
+
+    if (errors) {
+      throw new GraphQLError(errors[0].message, {
+        extensions: errors[0].extensions,
+      });
+    }
+
+    return {
+      id: emailId,
+      isVerified: true,
+    };
+  };
+
+  static confirmationResend =
+    (context: Context) => async (emailId: string, userId: string) => {
+      const [mail, errors] = await sqIAM.mutate(
+        (Mutation) => {
+          return Mutation.userEmailConfirmationResend({
+            userId,
+            emailId,
+          });
+        },
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (errors) {
+        throw new GraphQLError(errors[0].message, {
+          extensions: errors[0].extensions,
+        });
+      }
+
+      return mail;
     };
 
   static update =
