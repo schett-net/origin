@@ -25,6 +25,7 @@ import { AuthenticationFailedError } from "../errors";
 import { tokenCreate, tokenRefresh } from "../utils/token";
 import { UserEmail } from "./Email";
 import { Resource } from "./Resource";
+import { SocialController } from "./Social";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
 type UserUpdateValues = Parameters<Mutation["userUpdate"]>[0]["values"];

@@ -1,7 +1,8 @@
-import { withContext } from "@snek-at/function";
+import { Request, withContext } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
 import { Mutation } from "../clients/mailpress/src/schema.generated";
+import { forward } from "../utils/snek-function-forwarder";
 
 type MailScheduleArgs = Parameters<Mutation["mailSchedule"]>[0];
 type MailScheduleResult = ReturnType<Mutation["mailSchedule"]>;
@@ -20,40 +21,13 @@ export class Mailpress {
       template: MailScheduleArgs["template"]
     ) => Promise<MailScheduleResult>
   >((context) => async () => {
-    const requestBodyFromReq = context.req.body;
-
-    const query = requestBodyFromReq.query.replace(
-      "mailpressMailSchedule",
-      "mailSchedule"
-    );
-
-    const variables = requestBodyFromReq.variables;
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
+    const res = await forward<MailScheduleResult>({
+      context,
+      endpoint: apiURL,
+      name: "mailSchedule",
+      fieldPath: "mailpressMailSchedule",
     });
 
-    if (context.req.headers.authorization) {
-      headers.set("Authorization", context.req.headers.authorization);
-    }
-
-    const data = await fetch(apiURL, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    });
-
-    const json = await data.json();
-
-    if (json.errors) {
-      throw new GraphQLError(json.errors[0].message, {
-        extensions: json.errors[0].extensions,
-      });
-    }
-
-    return json.data.mailSchedule;
+    return res;
   });
 }

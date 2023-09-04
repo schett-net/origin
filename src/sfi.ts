@@ -10,15 +10,24 @@ import { Webhook } from "./controller/Webhook";
 
 import { configureOAuth } from "./oauth";
 import { UserEmail } from "./controller/Email";
+import { SocialController } from "./controller/Social";
 
 export default defineService(
   {
     Query: {
       user: User.user,
       allUser: User.users,
+
       userMe: User.me,
       resource: Resource.resource,
       shopifyAllProductId: Shopify.allProductId,
+
+      socialProfile: SocialController.socialProfile,
+      allSocialProfile: SocialController.allSocialProfile,
+
+      socialPost: SocialController.socialPost,
+      allSocialPost: SocialController.allSocialPost,
+      allSocialPostTrending: SocialController.allSocialPostTrending,
     },
     Mutation: {
       passwordReset: User.passwordReset,
@@ -43,6 +52,20 @@ export default defineService(
       shopifyProductUpdate: Shopify.productUpdate,
       shopifyProductDelete: Shopify.productDelete,
       mailpressMailSchedule: Mailpress.mailSchedule,
+
+      socialProfileCreate: SocialController.socialProfileCreate,
+      socialProfileUpdate: SocialController.socialProfileUpdate,
+      socialProfileDelete: SocialController.socialProfileDelete,
+
+      socialProfileFollow: SocialController.socialProfileFollow,
+      socialProfileUnfollow: SocialController.socialProfileUnfollow,
+
+      socialPostCreate: SocialController.socialPostCreate,
+      socialPostUpdate: SocialController.socialPostUpdate,
+      socialPostDelete: SocialController.socialPostDelete,
+
+      socialPostStar: SocialController.socialPostStar,
+      socialPostUnstar: SocialController.socialPostUnstar,
     },
   },
   {
