@@ -1,30 +1,26 @@
-import {
-  Context,
-  bindWithContext,
-  decorator,
-  withContext,
-} from "@snek-at/function";
-import {
-  AuthenticationContext,
-  requireAnyAuth,
-  requireAuthForResource,
-} from "@snek-functions/jwt";
+import { ServiceError, bindWithContext, withContext } from "@snek-at/function";
+import { requireAnyAuth } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
+import { TokenPair } from "@snek-functions/jwt/dist/schema.generated";
 import { asEnumKey } from "snek-query";
 import { sqIAM } from "../clients/iam/src";
 import {
-  OAuthProviderInput,
+  Query as IAMQuery,
   Mutation,
   OAuthCredentialInput,
+  OAuthProviderInput,
   SMTPCredentialInput,
 } from "../clients/iam/src/schema.generated";
-import { ACCESS_RESOURCE_ID } from "../constants";
+import {
+  Query as SocialQuery,
+  Mutation as SocialMutation,
+} from "../clients/social/src/schema.generated";
 import { AuthenticationFailedError } from "../errors";
+import { sfProxy } from "../utils/snek-function-proxy";
 import { tokenCreate, tokenRefresh } from "../utils/token";
 import { UserEmail } from "./Email";
-import { Resource } from "./Resource";
 import { SocialController } from "./Social";
 
 type RegisterInput = Parameters<Mutation["userCreate"]>[0];
@@ -34,205 +30,245 @@ type UserEmailCreateInput = Parameters<Mutation["userEmailCreate"]>[0];
 type UserEmailConfirmInput = Parameters<Mutation["userEmailConfirm"]>[0];
 type UserEmailUpdateInput = Parameters<Mutation["userEmailUpdate"]>[0];
 
-const requireUserAuthOnAccessResource = decorator((c) => {
-  const context = c as Context<AuthenticationContext>;
-  return requireAuthForResource(context, [ACCESS_RESOURCE_ID]);
-});
+export class UserController {
+  static endpoint = {
+    development: "https://services.snek.at/iam/graphql",
+    production: "http://iam:3000/graphql",
+  };
 
-export class User {
   static user = withContext(
-    (context) => async (id: string) => {
-      const [data, errors] = await sqIAM.query(
-        (Query) => {
-          const u = Query.user({ id });
-
-          return {
-            id: u.id,
-            username: u.username,
-            primaryEmailAddress: u.email().emailAddress,
-            resourceId: u.resourceId,
-            isAdmin: u.isAdmin,
-            createdAt: u.createdAt,
-            isActive: u.isActive,
-            details: {
-              firstName: u.details?.firstName || undefined,
-              lastName: u.details?.lastName || undefined,
-              avatarURL: u.details?.avatarURL || undefined,
-            },
-          };
-        },
-        {
-          headers: {
-            Authorization: context.req.headers.authorization,
-          },
+    (context) =>
+      async (
+        id?: string,
+        resourceId?: string,
+        login?: string
+      ): Promise<
+        ReturnType<IAMQuery["user"]> & {
+          profile?: ReturnType<SocialQuery["profile"]>;
         }
-      );
-
-      if (errors) {
-        throw new GraphQLError(errors[0].message, {
-          extensions: errors[0].extensions,
+      > => {
+        const user = await sfProxy<ReturnType<IAMQuery["user"]>>({
+          context,
+          endpoint: UserController.endpoint,
+          splitter: {
+            operationName: "User",
+            path: "user",
+            excludePaths: ["user.profile"],
+            addFields: ["user.id"],
+          },
         });
-      }
 
-      return new User(context, data);
-    },
+        if (!user?.id) {
+          throw new ServiceError("Internal Server Error", {
+            code: "INTERNAL_SERVER_ERROR",
+            statusCode: 500,
+            message: "Internal Server Error",
+          });
+        }
+
+        const profile = await sfProxy<ReturnType<SocialQuery["profile"]>>({
+          context,
+          endpoint: SocialController.endpoint,
+          splitter: {
+            operationName: "UserProfile",
+            path: "user.profile",
+            args: {
+              userId: {
+                kind: "StringValue",
+                value: user.id,
+              },
+            },
+            excludePaths: [],
+          },
+          returnNullOnErrors: true,
+        });
+
+        const data = {
+          ...user,
+          profile,
+        };
+
+        return data as any;
+      },
     {
-      decorators: [requireAnyAuth],
+      decorators: [],
     }
   );
 
-  static users = withContext(
-    (context) => async (resourceId: string) => {
-      const [data, errors] = await sqIAM.query(
-        (Query) => {
-          const users = Query.allUser({ resourceId });
+  static allUser = withContext((context) => async (resourceId: string) => {
+    const users = await sfProxy<ReturnType<IAMQuery["allUser"]>>({
+      context,
+      endpoint: UserController.endpoint,
+      splitter: {
+        operationName: "AllUser",
+        path: "allUser",
+        excludePaths: [],
+      },
+    });
 
-          return users.map((u) => ({
-            id: u.id,
-            username: u.username,
-            primaryEmailAddress: u.email().emailAddress,
-            resourceId: u.resourceId,
-            isAdmin: u.isAdmin,
-            createdAt: u.createdAt,
-            isActive: u.isActive,
-            details: {
-              firstName: u.details?.firstName || undefined,
-              lastName: u.details?.lastName || undefined,
-            },
-          }));
-        },
-        {
-          headers: {
-            Authorization: context.req.headers.authorization,
-          },
-        }
-      );
+    return users;
+  });
 
-      if (errors) {
-        throw new GraphQLError(errors[0].message, {
-          extensions: errors[0].extensions,
-        });
-      }
-
-      return data.map((d) => new User(context, d));
-    },
-    {
-      decorators: [requireAnyAuth],
-    }
-  );
-
-  static update = withContext(
+  static userUpdate = withContext(
     (context) => async (id: string, values: UserUpdateValues) => {
-      const [userId, errors] = await sqIAM.mutate(
-        (Mutation) => {
-          const user = Mutation.userUpdate({ id, values });
-
-          return user.id;
+      const user = await sfProxy<ReturnType<Mutation["userUpdate"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "UserUpdate",
+          path: "userUpdate",
+          excludePaths: [],
         },
-        {
-          headers: {
-            Authorization: context.req.headers.authorization,
+      });
+
+      return user;
+    }
+  );
+
+  static userDelete = withContext((context) => async (id: string) => {
+    const user = await sfProxy<ReturnType<Mutation["userDelete"]>>({
+      context,
+      endpoint: UserController.endpoint,
+      splitter: {
+        operationName: "UserDelete",
+        path: "userDelete",
+        excludePaths: [],
+      },
+    });
+
+    return user;
+  });
+
+  static userMe = withContext(
+    (context) => async () => {
+      const userId = context.multiAuth[0].userId;
+
+      const user = await sfProxy<ReturnType<IAMQuery["user"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "User",
+          path: "userMe",
+          remoteFieldName: "user",
+          excludePaths: [],
+          args: {
+            id: {
+              kind: "StringValue",
+              value: userId,
+            },
           },
-        }
-      );
+        },
+      });
 
-      if (errors) {
-        throw new GraphQLError(errors[0].message, {
-          extensions: errors[0].extensions,
-        });
-      }
-
-      return bindWithContext(context, User.user)(userId);
+      return user;
     },
     {
       decorators: [requireAnyAuth],
     }
   );
 
-  static delete = withContext(
-    (context) => async (id: string) => {
-      const [_, errors] = await sqIAM.mutate(
-        (Mutation) => Mutation.userDelete({ id }),
-        {
-          headers: {
-            Authorization: context.req.headers.authorization,
-          },
-        }
-      );
-
-      if (errors) {
-        throw new GraphQLError(errors[0].message, {
-          extensions: errors[0].extensions,
-        });
-      }
-
-      return true;
-    },
-    {
-      decorators: [requireAnyAuth],
-    }
-  );
-
-  static register = withContext(
+  static userRegister = withContext(
     (context) =>
       async (
         resourceId: RegisterInput["resourceId"],
         values: RegisterInput["values"],
         skipEmailVerification?: RegisterInput["skipEmailVerification"]
       ) => {
-        const [{ userId, accessToken }, errors] = await sqIAM.mutate(
-          (Mutation) => {
-            const u = Mutation.userCreate({
-              resourceId,
-              values,
-              skipEmailVerification: skipEmailVerification || false,
-            });
-
-            return {
-              userId: u.user.id,
-              accessToken: u.accessToken,
-            };
+        return sfProxy<ReturnType<Mutation["userCreate"]>>({
+          context,
+          endpoint: UserController.endpoint,
+          splitter: {
+            operationName: "UserCreate",
+            path: "userRegister",
+            remoteFieldName: "userCreate",
+            excludePaths: [],
           },
-          {
-            headers: {
-              Authorization: context.req.headers.authorization,
-            },
-          }
-        );
+        });
+      }
+  );
 
-        if (errors) {
-          throw new GraphQLError(errors[0].message, {
-            extensions: errors[0].extensions,
+  static userCreate = withContext(
+    (context) =>
+      async (
+        resourceId: RegisterInput["resourceId"],
+        values: RegisterInput["values"],
+        skipEmailVerification?: RegisterInput["skipEmailVerification"],
+        createProfile?: boolean
+      ) => {
+        const user = await sfProxy<ReturnType<Mutation["userCreate"]>>({
+          context,
+          endpoint: UserController.endpoint,
+          splitter: {
+            operationName: "UserCreate",
+            path: "userCreate",
+            excludePaths: ["userCreate.profile"],
+            args: {
+              createProfile: null,
+            },
+          },
+        });
+
+        let profile: ReturnType<SocialQuery["profile"]> | null = null;
+
+        if (createProfile) {
+          profile = await sfProxy<SocialMutation["profileCreate"]>({
+            context,
+            endpoint: SocialController.endpoint,
+            splitter: {
+              operationType: "mutation",
+              operationName: "ProfileCreate",
+              path: "userCreate.profile",
+              remoteFieldName: "profileCreate",
+              excludePaths: [],
+              args: {
+                resourceId: null,
+                values: null,
+                skipEmailVerification: null,
+                createProfile: null,
+              },
+            },
+            headers: {
+              "x-forwarded-user": user.id,
+            },
           });
         }
 
         return {
-          user: () => bindWithContext(context, User.user)(userId),
-          accessToken,
+          ...user,
+          profile,
         };
       }
   );
 
-  static me = withContext(
-    (context) => async () => {
-      const userId = context.multiAuth[0].userId;
-
-      return bindWithContext(context, User.user)(userId);
-    },
-    {
-      decorators: [requireAnyAuth],
+  static userCreateConfirm = withContext(
+    (context) => async (userId: string, otp: string) => {
+      return sfProxy<ReturnType<Mutation["userCreateConfirm"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "UserCreateConfirm",
+          path: "userCreateConfirm",
+        },
+      });
     }
   );
 
-  static signIn = withContext(
+  static userSignIn = withContext(
     (context) =>
-      async (login: string, password: string, resourceId: string) => {
-        const [userId, errors] = await sqAuthentication.mutate(
+      async (
+        login: string,
+        password: string,
+        resourceId: string
+      ): Promise<{
+        tokenPair: TokenPair;
+        user: Awaited<ReturnType<typeof UserController.user>>;
+      }> => {
+        const [userId, authErrors] = await sqAuthentication.mutate(
           (Mutation) =>
             Mutation.userAuthenticate({ login, password, resourceId })?.userId
         );
 
-        if (errors) {
+        if (authErrors) {
           throw new AuthenticationFailedError();
         }
 
@@ -244,38 +280,85 @@ export class User {
         ] = `Bearer ${unprivilegedTokenPair.accessToken}`;
 
         // Get user to determine permissions
-        const user = await bindWithContext(context, User.user)(userId);
+        const [auth, userErrors] = await sqIAM.query(
+          (Query) => {
+            const u = Query.user({ id: userId });
+
+            return {
+              isAdmin: u.isAdmin,
+              roles: u.roles,
+            };
+          },
+          {
+            headers: {
+              Authorization: context.req.headers.authorization,
+            },
+          }
+        );
+
+        if (userErrors) {
+          throw new GraphQLError(userErrors[0].message, {
+            extensions: userErrors[0].extensions,
+          });
+        }
 
         const scope: any = {};
+        const roles: string[] = auth.roles.map((r) => r.id);
 
-        if (user.isAdmin) {
+        if (auth.isAdmin) {
+          // Deprecated in favor of roles
           scope.admin = ["*"];
         }
 
         // Create privileged access token
-        const tokenPair = await tokenCreate(userId, resourceId, scope);
+        const tokenPair = await tokenCreate(userId, resourceId, {
+          scope,
+          roles,
+        });
 
         // override context authorization
         context.req.headers[
           "authorization"
         ] = `Bearer ${tokenPair.accessToken}`;
 
-        const userWithUpdatedCtx = new User(context, {
-          id: user.id,
-          username: user.username,
-          primaryEmailAddress: user.primaryEmailAddress,
-          resourceId: user.resourceId,
-          isAdmin: user.isAdmin,
-          createdAt: user.createdAt,
-          isActive: user.isActive,
-          details: user.details,
-        });
-
         return {
-          tokenPair: tokenPair,
-          user: userWithUpdatedCtx,
-          me: () => bindWithContext(context, User.me)(),
-        };
+          tokenPair,
+          user: {
+            ...(await sfProxy<ReturnType<IAMQuery["user"]>>({
+              context,
+              endpoint: UserController.endpoint,
+              splitter: {
+                operationType: "query",
+                operationName: "User",
+                path: "userSignIn.user",
+                excludePaths: ["userSignIn.user.profile"],
+                args: {
+                  id: {
+                    kind: "StringValue",
+                    value: userId,
+                  },
+                },
+              },
+            })),
+            profile: await sfProxy<ReturnType<SocialQuery["profile"]>>({
+              context,
+              endpoint: SocialController.endpoint,
+              splitter: {
+                operationType: "query",
+                operationName: "UserProfile",
+                path: "userSignIn.user.profile",
+                args: {
+                  userId: {
+                    kind: "StringValue",
+                    value: userId,
+                  },
+                },
+                excludePaths: [],
+              },
+              returnNullOnErrors: true,
+            }),
+          },
+        } as any;
       }
   );
 
@@ -339,11 +422,11 @@ export class User {
     }
   );
 
-  static signOut = withContext((context) => (resourceId?: string) => {
+  static userSignOut = withContext((context) => (resourceId?: string) => {
     throw new Error("Not implemented yet");
   });
 
-  static refresh = withContext(
+  static userRefresh = withContext(
     (context) => async (accessToken: string, refreshToken: string) => {
       const tokenPair = await tokenRefresh({
         accessToken,
@@ -353,64 +436,35 @@ export class User {
       // override context authorization
       context.req.headers["authorization"] = `Bearer ${tokenPair.accessToken}`;
 
+      const auth = await requireAnyAuth(context, []);
+
+      const userId = auth.multiAuth[0].userId;
+
+      const me = await sfProxy<ReturnType<IAMQuery["user"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationType: "query",
+          operationName: "User",
+          path: "userRefresh.me",
+          remoteFieldName: "user",
+          excludePaths: ["userRefresh.tokenPair"],
+          args: {
+            id: {
+              kind: "StringValue",
+              value: userId,
+            },
+            refreshToken: null,
+            accessToken: null,
+          },
+        },
+        returnNullOnSplitterErrors: true,
+      });
+
       return {
         tokenPair,
-        me: () => bindWithContext(context, User.me)(),
+        me,
       };
-    }
-  );
-
-  static ssoSignIn = withContext(
-    (context) => async (resourceId: string) => {
-      const userId = context.multiAuth[0].userId;
-
-      const [usersUnderSameAccount, errors] = await sqIAM.query(
-        (Query) => {
-          return (
-            Query.user({ id: userId }).account?.users.map((u) => {
-              return {
-                userId: u.id,
-                resourceId: u.resourceId,
-              };
-            }) ?? []
-          );
-        },
-        {
-          headers: {
-            Authorization: context.req.headers.authorization,
-          },
-        }
-      );
-
-      if (errors) {
-        throw new GraphQLError(errors[0].message, {
-          extensions: errors[0].extensions,
-        });
-      }
-
-      const ssoUser = usersUnderSameAccount.find(
-        (u) => u.resourceId === resourceId
-      );
-
-      if (ssoUser) {
-        const tokenPair = await tokenCreate(ssoUser.userId, resourceId);
-
-        // override context authorization
-        context.req.headers[
-          "authorization"
-        ] = `Bearer ${tokenPair.accessToken}`;
-
-        return {
-          tokenPair: tokenPair,
-          user: () => bindWithContext(context, User.user)(ssoUser.userId),
-          me: () => bindWithContext(context, User.me)(),
-        };
-      }
-
-      throw new AuthenticationFailedError();
-    },
-    {
-      decorators: [requireUserAuthOnAccessResource],
     }
   );
 
@@ -508,75 +562,20 @@ export class User {
     }
   );
 
-  #context: Context;
-
-  id: string;
-  username: string;
-  primaryEmailAddress: string;
-  isAdmin: boolean;
-  isActive: boolean;
-  createdAt: string;
-  details: {
-    firstName?: string;
-    lastName?: string;
-    avatarURL?: string;
-  };
-
-  private resourceId: string;
-
-  constructor(
-    context: Context,
-    data: {
-      id: string;
-      username: string;
-      primaryEmailAddress: string;
-      resourceId: string;
-      isAdmin: boolean;
-      isActive: boolean;
-      createdAt: string;
-      details?: {
-        firstName?: string;
-        lastName?: string;
-      };
+  static userTokenCreate = withContext(
+    (context) => async (userId: string, name: string) => {
+      return sfProxy<ReturnType<Mutation["userTokenCreate"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "UserTokenCreate",
+          path: "userTokenCreate",
+          excludePaths: [],
+        },
+      });
+    },
+    {
+      decorators: [],
     }
-  ) {
-    this.#context = context;
-
-    for (const key in data) {
-      this[key] = data[key];
-    }
-  }
-
-  resource = async () =>
-    bindWithContext(this.#context, Resource.resource)(this.resourceId);
-
-  emails = async () => UserEmail.mails(this.#context)(this.id);
-
-  // details = async () => {
-  //   console.log("Details", this.#context.req.headers.authorization);
-
-  //   const [details, errors] = await sqIAM.query(
-  //     (Query) => {
-  //       const details = Query.user({ id: this.id }).details;
-
-  //       return {
-  //         firstName: details?.firstName || undefined,
-  //         lastName: details?.lastName || undefined,
-  //       };
-  //     },
-  //     {
-  //       headers: {
-  //         Authorization: this.#context.req.headers.authorization,
-  //       },
-  //     }
-  //   );
-
-  //   if (errors) {
-  //     throw new GraphQLError(errors[0].message, {
-  //       extensions: errors[0].extensions,
-  //     });
-  //   }
-
-  //   return details;
-  // };
+  );
 }

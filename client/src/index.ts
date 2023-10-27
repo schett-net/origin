@@ -25,6 +25,14 @@ export const sq = makeSnekQuery(
       },
     ],
     onError: async ({ graphQLErrors, forward, operation }) => {
+      const logout = () => {
+        setTokenPair(null);
+
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      };
+
       if (!graphQLErrors) {
         return;
       }
@@ -50,6 +58,7 @@ export const sq = makeSnekQuery(
           });
 
           if (errors) {
+            logout();
             return;
           }
 
@@ -64,6 +73,7 @@ export const sq = makeSnekQuery(
 
           return forward(operation);
         } else if (err.extensions?.code === "REFRESH_TOKEN_EXPIRED") {
+          logout();
           return;
         }
       }

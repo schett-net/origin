@@ -2,5 +2,5 @@ import { makeSnekQuery } from "snek-query";
 import { Query, Mutation } from "./schema.generated.js";
 
 export const sq = makeSnekQuery({ Query, Mutation }, {
-    apiURL: "http://localhost:3000/graphql"
+    apiURL: "https://services.snek.at/social/graphql"
 });

@@ -9,13 +9,17 @@ interface TokenPair {
 export const tokenCreate = async (
   userId: string,
   resourceId: string,
-  scope: object = {}
+  auth?: {
+    scope?: object;
+    roles?: string[];
+  }
 ): Promise<TokenPair> => {
   const [tokenPair, jwtErrors] = await sqJWT.mutate((Mutation) => {
     const t = Mutation.tokenCreate({
       userId,
       resourceId,
-      scope,
+      scope: auth?.scope ?? {},
+      roles: auth?.roles ?? [],
     });
 
     return {

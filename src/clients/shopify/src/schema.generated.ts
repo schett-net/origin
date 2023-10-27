@@ -2,11 +2,11 @@
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
 
-type ShopifyIdInput = {
+export type ShopifyIdInput = {
     storeUrl: t.String;
     accessToken: t.String;
 };
-type ShopifyProductInputInput = {
+export type ShopifyProductInputInput = {
     handle?: t.String;
     title: t.String;
     descriptionHtml?: t.String;
@@ -16,13 +16,13 @@ type ShopifyProductInputInput = {
     variants?: VariantsInput;
     vendor?: t.String;
 };
-type MetafieldsInput = {
+export type MetafieldsInput = {
     namespace: t.String;
     key: t.String;
     value: t.String;
     type: t.String;
 };
-type VariantsInput = {
+export type VariantsInput = {
     price?: t.String;
     compareAtPrice?: t.String;
     sku?: t.String;
@@ -30,10 +30,10 @@ type VariantsInput = {
     inventoryPolicy?: t.String;
     inventoryItem?: InventoryItemInput;
 };
-type InventoryItemInput = {
+export type InventoryItemInput = {
     tracked?: t.Boolean;
 };
-type UpdateShopifyProductInputInput = {
+export type UpdateShopifyProductInputInput = {
     id: t.String;
     handle?: t.String;
     title?: t.String;
@@ -44,13 +44,13 @@ type UpdateShopifyProductInputInput = {
     variants?: VariantsInput_1;
     vendor?: t.String;
 };
-type MetafieldsInput_1 = {
+export type MetafieldsInput_1 = {
     namespace: t.String;
     key: t.String;
     value: t.String;
     type: t.String;
 };
-type VariantsInput_1 = {
+export type VariantsInput_1 = {
     price?: t.String;
     compareAtPrice?: t.String;
     sku?: t.String;
@@ -58,7 +58,7 @@ type VariantsInput_1 = {
     inventoryPolicy?: t.String;
     inventoryItem?: InventoryItemInput_1;
 };
-type InventoryItemInput_1 = {
+export type InventoryItemInput_1 = {
     tracked?: t.Boolean;
 };
 

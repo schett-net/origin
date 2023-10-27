@@ -2,7 +2,7 @@
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
 
-type PublishConfigInput = {
+export type PublishConfigInput = {
     repository: t.String;
     repositoryCwd?: t.String;
     githubAccessToken: t.String;
@@ -33,87 +33,87 @@ export class Date {
     toTimeString: t.String;
     toLocaleDateString: t.String;
     toLocaleTimeString: t.String;
-    getTime: t.NotSupportedYet;
-    getFullYear: t.NotSupportedYet;
-    getUTCFullYear: t.NotSupportedYet;
-    getMonth: t.NotSupportedYet;
-    getUTCMonth: t.NotSupportedYet;
-    getDate: t.NotSupportedYet;
-    getUTCDate: t.NotSupportedYet;
-    getDay: t.NotSupportedYet;
-    getUTCDay: t.NotSupportedYet;
-    getHours: t.NotSupportedYet;
-    getUTCHours: t.NotSupportedYet;
-    getMinutes: t.NotSupportedYet;
-    getUTCMinutes: t.NotSupportedYet;
-    getSeconds: t.NotSupportedYet;
-    getUTCSeconds: t.NotSupportedYet;
-    getMilliseconds: t.NotSupportedYet;
-    getUTCMilliseconds: t.NotSupportedYet;
-    getTimezoneOffset: t.NotSupportedYet;
+    getTime: t.Number;
+    getFullYear: t.Number;
+    getUTCFullYear: t.Number;
+    getMonth: t.Number;
+    getUTCMonth: t.Number;
+    getDate: t.Number;
+    getUTCDate: t.Number;
+    getDay: t.Number;
+    getUTCDay: t.Number;
+    getHours: t.Number;
+    getUTCHours: t.Number;
+    getMinutes: t.Number;
+    getUTCMinutes: t.Number;
+    getSeconds: t.Number;
+    getUTCSeconds: t.Number;
+    getMilliseconds: t.Number;
+    getUTCMilliseconds: t.Number;
+    getTimezoneOffset: t.Number;
     setTime: (args: {
-        time: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        time: t.Number;
+    }) => t.Number;
     setMilliseconds: (args: {
-        ms: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        ms: t.Number;
+    }) => t.Number;
     setUTCMilliseconds: (args: {
-        ms: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        ms: t.Number;
+    }) => t.Number;
     setSeconds: (args: {
-        sec: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        sec: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setUTCSeconds: (args: {
-        sec: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        sec: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setMinutes: (args: {
-        min: t.NotSupportedYet;
-        sec?: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        min: t.Number;
+        sec?: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setUTCMinutes: (args: {
-        min: t.NotSupportedYet;
-        sec?: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        min: t.Number;
+        sec?: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setHours: (args: {
-        hours: t.NotSupportedYet;
-        min?: t.NotSupportedYet;
-        sec?: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        hours: t.Number;
+        min?: t.Number;
+        sec?: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setUTCHours: (args: {
-        hours: t.NotSupportedYet;
-        min?: t.NotSupportedYet;
-        sec?: t.NotSupportedYet;
-        ms?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        hours: t.Number;
+        min?: t.Number;
+        sec?: t.Number;
+        ms?: t.Number;
+    }) => t.Number;
     setDate: (args: {
-        date: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        date: t.Number;
+    }) => t.Number;
     setUTCDate: (args: {
-        date: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        date: t.Number;
+    }) => t.Number;
     setMonth: (args: {
-        month: t.NotSupportedYet;
-        date?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        month: t.Number;
+        date?: t.Number;
+    }) => t.Number;
     setUTCMonth: (args: {
-        month: t.NotSupportedYet;
-        date?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        month: t.Number;
+        date?: t.Number;
+    }) => t.Number;
     setFullYear: (args: {
-        year: t.NotSupportedYet;
-        month?: t.NotSupportedYet;
-        date?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        year: t.Number;
+        month?: t.Number;
+        date?: t.Number;
+    }) => t.Number;
     setUTCFullYear: (args: {
-        year: t.NotSupportedYet;
-        month?: t.NotSupportedYet;
-        date?: t.NotSupportedYet;
-    }) => t.NotSupportedYet;
+        year: t.Number;
+        month?: t.Number;
+        date?: t.Number;
+    }) => t.Number;
     toUTCString: t.String;
     toISOString: t.String;
     toJSON: (args: {

@@ -6,9 +6,10 @@ import {
   PostDataInput,
   PostUpdateDataInput,
   Profile,
+  ProfileUpdateDataInput,
   Query,
 } from "../clients/social/src/schema.generated";
-import { forward } from "../utils/snek-function-forwarder";
+import { sfProxy } from "../utils/snek-function-proxy";
 
 const endpoint = {
   development: "https://services.snek.at/social/graphql",
@@ -16,85 +17,94 @@ const endpoint = {
 };
 
 export class SocialController {
-  static socialProfile = withContext(
-    (context) => async (profileId?: string) => {
-      const res = await forward<ReturnType<Query["profile"]>>({
+  static endpoint = endpoint;
+
+  static socialPost = withContext(
+    (context) => async (postId?: string, slug?: string) => {
+      const res = await sfProxy<ReturnType<Query["post"]>>({
         context,
         endpoint,
-        name: "profile",
-        fieldPath: "socialProfile",
+        splitter: {
+          path: "socialPost",
+          remoteFieldName: "post",
+          operationName: "Post",
+        },
       });
 
       return res;
     }
   );
 
-  static allSocialProfile = withContext((context) => async () => {
-    const res = await forward<Query["allProfile"]>({
-      context,
-      endpoint,
-      name: "allProfile",
-      fieldPath: "allSocialProfile",
-    });
-
-    return res;
-  });
-
-  static socialPost = withContext((context) => async (postId: string) => {
-    const res = await forward<ReturnType<Query["post"]>>({
-      context,
-      endpoint,
-      name: "post",
-      fieldPath: "socialPost",
-    });
-
-    return res;
-  });
-
   static allSocialPost = withContext(
-    (context) => async (filters?: FiltersInput) => {
-      const res = await forward<ReturnType<Query["allPost"]>>({
-        context,
-        endpoint,
-        name: "allPost",
-        fieldPath: "allSocialPost",
-      });
+    (context) =>
+      async (
+        after?: string,
+        before?: string,
+        first?: number,
+        last?: number,
+        filters?: FiltersInput
+      ) => {
+        const res = await sfProxy<ReturnType<Query["allPost"]>>({
+          context,
+          endpoint,
+          splitter: {
+            path: "allSocialPost",
+            remoteFieldName: "allPost",
+            operationName: "AllPost",
+          },
+        });
 
-      return res;
-    }
+        return res;
+      }
   );
 
   static allSocialPostTrending = withContext(
-    (context) => async (filters?: FiltersInput_1) => {
-      const res = await forward<ReturnType<Query["allPostTrending"]>>({
-        context,
-        endpoint,
-        name: "allPostTrending",
-        fieldPath: "allSocialPostTrending",
-      });
+    (context) =>
+      async (
+        after?: string,
+        before?: string,
+        first?: number,
+        last?: number,
+        filters?: FiltersInput_1
+      ) => {
+        const res = await sfProxy<ReturnType<Query["allPostTrending"]>>({
+          context,
+          endpoint,
+          splitter: {
+            path: "allSocialPostTrending",
+            remoteFieldName: "allPostTrending",
+            operationName: "AllPostTrending",
+          },
+        });
 
-      return res;
-    }
+        return res;
+      }
   );
 
   static socialProfileCreate = withContext((context) => async () => {
-    const res = await forward<Mutation["profileCreate"]>({
+    const res = await sfProxy<Mutation["profileCreate"]>({
       context,
       endpoint,
-      name: "profileCreate",
-      fieldPath: "socialProfileCreate",
+      splitter: {
+        path: "socialProfileCreate",
+        remoteFieldName: "profileCreate",
+        operationName: "ProfileCreate",
+      },
     });
 
     return res;
   });
 
   static socialProfileUpdate = withContext(
-    (context) => async (data: Profile) => {
-      const res = await forward<ReturnType<Mutation["profileUpdate"]>>({
+    (context) => async (values: ProfileUpdateDataInput) => {
+      const res = await sfProxy<ReturnType<Mutation["profileUpdate"]>>({
         context,
         endpoint,
-        name: "profileUpdate",
-        fieldPath: "socialProfileUpdate",
+        splitter: {
+          path: "socialProfileUpdate",
+          remoteFieldName: "profileUpdate",
+          operationName: "ProfileUpdate",
+        },
       });
 
       return res;
@@ -102,23 +112,29 @@ export class SocialController {
   );
 
   static socialProfileDelete = withContext((context) => async () => {
-    const res = await forward<Mutation["profileDelete"]>({
+    const res = await sfProxy<Mutation["profileDelete"]>({
       context,
       endpoint,
-      name: "profileDelete",
-      fieldPath: "socialProfileDelete",
+      splitter: {
+        path: "socialProfileDelete",
+        remoteFieldName: "profileDelete",
+        operationName: "ProfileDelete",
+      },
     });
 
     return res;
   });
 
   static socialProfileFollow = withContext(
-    (context) => async (followProfileId: string) => {
-      const res = await forward<ReturnType<Mutation["profileFollow"]>>({
+    (context) => async (userId: string) => {
+      const res = await sfProxy<ReturnType<Mutation["profileFollow"]>>({
         context,
         endpoint,
-        name: "profileFollow",
-        fieldPath: "socialProfileFollow",
+        splitter: {
+          path: "socialProfileFollow",
+          remoteFieldName: "profileFollow",
+          operationName: "ProfileFollow",
+        },
       });
 
       return res;
@@ -126,12 +142,15 @@ export class SocialController {
   );
 
   static socialProfileUnfollow = withContext(
-    (context) => async (followProfileId: string) => {
-      const res = await forward<ReturnType<Mutation["profileUnfollow"]>>({
+    (context) => async (userId: string) => {
+      const res = await sfProxy<ReturnType<Mutation["profileUnfollow"]>>({
         context,
         endpoint,
-        name: "profileUnfollow",
-        fieldPath: "socialProfileUnfollow",
+        splitter: {
+          path: "socialProfileUnfollow",
+          remoteFieldName: "profileUnfollow",
+          operationName: "ProfileUnfollow",
+        },
       });
 
       return res;
@@ -140,11 +159,14 @@ export class SocialController {
 
   static socialPostCreate = withContext(
     (context) => async (values: PostDataInput) => {
-      const res = await forward<ReturnType<Mutation["postCreate"]>>({
+      const res = await sfProxy<ReturnType<Mutation["postCreate"]>>({
         context,
         endpoint,
-        name: "postCreate",
-        fieldPath: "socialPostCreate",
+        splitter: {
+          path: "socialPostCreate",
+          remoteFieldName: "postCreate",
+          operationName: "PostCreate",
+        },
       });
 
       return res;
@@ -153,11 +175,14 @@ export class SocialController {
 
   static socialPostUpdate = withContext(
     (context) => async (postId: string, values: PostUpdateDataInput) => {
-      const res = await forward<ReturnType<Mutation["postUpdate"]>>({
+      const res = await sfProxy<ReturnType<Mutation["postUpdate"]>>({
         context,
         endpoint,
-        name: "postUpdate",
-        fieldPath: "socialPostUpdate",
+        splitter: {
+          path: "socialPostUpdate",
+          remoteFieldName: "postUpdate",
+          operationName: "PostUpdate",
+        },
       });
 
       return res;
@@ -165,33 +190,42 @@ export class SocialController {
   );
 
   static socialPostDelete = withContext((context) => async (postId: string) => {
-    const res = await forward<ReturnType<Mutation["postDelete"]>>({
+    const res = await sfProxy<ReturnType<Mutation["postDelete"]>>({
       context,
       endpoint,
-      name: "postDelete",
-      fieldPath: "socialPostDelete",
+      splitter: {
+        path: "socialPostDelete",
+        remoteFieldName: "postDelete",
+        operationName: "PostDelete",
+      },
     });
 
     return res;
   });
 
   static socialPostStar = withContext((context) => async (postId: string) => {
-    const res = await forward<ReturnType<Mutation["postStar"]>>({
+    const res = await sfProxy<ReturnType<Mutation["postStar"]>>({
       context,
       endpoint,
-      name: "postStar",
-      fieldPath: "socialPostStar",
+      splitter: {
+        path: "socialPostStar",
+        remoteFieldName: "postStar",
+        operationName: "PostStar",
+      },
     });
 
     return res;
   });
 
   static socialPostUnstar = withContext((context) => async (postId: string) => {
-    const res = await forward<ReturnType<Mutation["postUnstar"]>>({
+    const res = await sfProxy<ReturnType<Mutation["postUnstar"]>>({
       context,
       endpoint,
-      name: "postUnstar",
-      fieldPath: "socialPostUnstar",
+      splitter: {
+        path: "socialPostUnstar",
+        remoteFieldName: "postUnstar",
+        operationName: "PostUnstar",
+      },
     });
 
     return res;

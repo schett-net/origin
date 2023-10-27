@@ -2,7 +2,7 @@ import { Request, withContext } from "@snek-at/function";
 import { GraphQLError } from "graphql";
 
 import { Mutation } from "../clients/mailpress/src/schema.generated";
-import { forward } from "../utils/snek-function-forwarder";
+import { sfProxy } from "../utils/snek-function-proxy";
 
 type MailScheduleArgs = Parameters<Mutation["mailSchedule"]>[0];
 type MailScheduleResult = ReturnType<Mutation["mailSchedule"]>;
@@ -21,12 +21,20 @@ export class Mailpress {
       template: MailScheduleArgs["template"]
     ) => Promise<MailScheduleResult>
   >((context) => async () => {
-    const res = await forward<MailScheduleResult>({
+    const res = await sfProxy<MailScheduleResult>({
       context,
       endpoint: apiURL,
-      name: "mailSchedule",
-      fieldPath: "mailpressMailSchedule",
+      splitter: {
+        path: "mailpressMailSchedule",
+        remoteFieldName: "mailSchedule",
+        excludePaths: [],
+        operationName: "MailSchedule",
+      },
     });
+
+    if (!res) {
+      throw new GraphQLError("Mailpress mailSchedule failed");
+    }
 
     return res;
   });

@@ -1,35 +1,35 @@
 
 import { proxy, arrayProxy, fnProxy, fnArrayProxy, t } from "snek-query";
 
-enum EmailAddressType {
+export enum EmailAddressType {
     EMAIL_ADDRESS = "EMAIL_ADDRESS",
     EMAIL_ID = "EMAIL_ID",
     USER_ID = "USER_ID"
 }
-enum EmailAddressTypeInput {
+export enum EmailAddressTypeInput {
     EMAIL_ADDRESS = "EMAIL_ADDRESS",
     EMAIL_ID = "EMAIL_ID",
     USER_ID = "USER_ID"
 }
 
-type ContextInput = {
+export type ContextInput = {
     envelope: EmailEnvelopeInput;
 };
-type EmailEnvelopeInput = {
+export type EmailEnvelopeInput = {
     from?: EmailAddressInput;
     to?: EmailAddressInput[];
     subject?: t.String;
     replyTo?: EmailAddressInput;
 };
-type EmailAddressInput = {
+export type EmailAddressInput = {
     value: t.String;
     type: EmailAddressTypeInput;
 };
-type TemplateInput = {
+export type TemplateInput = {
     id: t.String;
     values?: t.NotSupportedYet;
 };
-type EmailTemplateInput = {
+export type EmailTemplateInput = {
     content: t.String;
     variables?: t.NotSupportedYet;
     envelope?: EmailEnvelopeInput;
@@ -37,7 +37,7 @@ type EmailTemplateInput = {
     authorizationUser?: AuthorizationUserInput;
     linkedEmailTemplates?: EmailTemplateInput[];
 };
-type AuthorizationUserInput = {
+export type AuthorizationUserInput = {
     id: t.String;
     authorization: t.String;
 };

@@ -5,57 +5,64 @@ import { Jaen } from "./controller/Jaen";
 import { Mailpress } from "./controller/Mailpress";
 import { Resource } from "./controller/Resource";
 import { Shopify } from "./controller/Shopify";
-import { User } from "./controller/User";
+import { UserController } from "./controller/User";
 import { Webhook } from "./controller/Webhook";
 
 import { configureOAuth } from "./oauth";
 import { UserEmail } from "./controller/Email";
 import { SocialController } from "./controller/Social";
+// import { SocialController } from "./controller/Social";
 
 export default defineService(
   {
     Query: {
-      user: User.user,
-      allUser: User.users,
+      user: UserController.user,
+      allUser: UserController.allUser,
 
-      userMe: User.me,
+      userMe: UserController.userMe,
       resource: Resource.resource,
       shopifyAllProductId: Shopify.allProductId,
 
-      socialProfile: SocialController.socialProfile,
-      allSocialProfile: SocialController.allSocialProfile,
+      // socialProfile: SocialController.socialProfile,
+      // allSocialProfile: SocialController.allSocialProfile,
 
       socialPost: SocialController.socialPost,
       allSocialPost: SocialController.allSocialPost,
       allSocialPostTrending: SocialController.allSocialPostTrending,
     },
     Mutation: {
-      passwordReset: User.passwordReset,
-      passwordResetConfirm: User.passwordResetConfirm,
+      passwordReset: UserController.passwordReset,
+      passwordResetConfirm: UserController.passwordResetConfirm,
 
-      userSignIn: User.signIn,
-      userSignOut: User.signOut,
-      userRefresh: User.refresh,
-      userSSO: User.ssoSignIn,
-      userRegister: User.register,
-      userUpdate: User.update,
-      userDelete: User.delete,
+      userSignIn: UserController.userSignIn,
+      userSignOut: UserController.userSignOut,
+      userRefresh: UserController.userRefresh,
 
-      userEmailCreate: User.emailCreate,
+      userRegister: UserController.userRegister,
+      userCreate: UserController.userCreate,
+      userCreateConfirm: UserController.userCreateConfirm,
+
+      userUpdate: UserController.userUpdate,
+      userDelete: UserController.userDelete,
+
+      userEmailCreate: UserController.emailCreate,
       userEmailConfirm: UserEmail.confirm,
-      userEmailConfirmationResend: User.userEmailConfirmationResend,
-      userEmailUpdate: User.emailUpdate,
-      userEmailDelete: User.emailDelete,
-      userExternalCredentialCreate: User.externalCredentialCreate,
+      userEmailConfirmationResend: UserController.userEmailConfirmationResend,
+      userEmailUpdate: UserController.emailUpdate,
+      userEmailDelete: UserController.emailDelete,
+      userExternalCredentialCreate: UserController.externalCredentialCreate,
+
+      userTokenCreate: UserController.userTokenCreate,
+
       jaenPublish: Jaen.publish,
       shopifyProductCreate: Shopify.productCreate,
       shopifyProductUpdate: Shopify.productUpdate,
       shopifyProductDelete: Shopify.productDelete,
       mailpressMailSchedule: Mailpress.mailSchedule,
 
-      socialProfileCreate: SocialController.socialProfileCreate,
+      // socialProfileCreate: SocialController.socialProfileCreate,
       socialProfileUpdate: SocialController.socialProfileUpdate,
-      socialProfileDelete: SocialController.socialProfileDelete,
+      // socialProfileDelete: SocialController.socialProfileDelete,
 
       socialProfileFollow: SocialController.socialProfileFollow,
       socialProfileUnfollow: SocialController.socialProfileUnfollow,
