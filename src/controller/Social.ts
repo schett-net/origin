@@ -20,7 +20,7 @@ export class SocialController {
   static endpoint = endpoint;
 
   static socialPost = withContext(
-    (context) => async (postId?: string, slug?: string) => {
+    (context) => async (resourceId: string, postId?: string, slug?: string) => {
       const res = await sfProxy<ReturnType<Query["post"]>>({
         context,
         endpoint,
@@ -38,11 +38,12 @@ export class SocialController {
   static allSocialPost = withContext(
     (context) =>
       async (
+        resourceId: string,
         after?: string,
         before?: string,
         first?: number,
         last?: number,
-        filters?: FiltersInput
+        filters?: FiltersInput_1
       ) => {
         const res = await sfProxy<ReturnType<Query["allPost"]>>({
           context,
@@ -61,6 +62,7 @@ export class SocialController {
   static allSocialPostTrending = withContext(
     (context) =>
       async (
+        resourceId: string,
         after?: string,
         before?: string,
         first?: number,
@@ -81,19 +83,21 @@ export class SocialController {
       }
   );
 
-  static socialProfileCreate = withContext((context) => async () => {
-    const res = await sfProxy<Mutation["profileCreate"]>({
-      context,
-      endpoint,
-      splitter: {
-        path: "socialProfileCreate",
-        remoteFieldName: "profileCreate",
-        operationName: "ProfileCreate",
-      },
-    });
+  static socialProfileCreate = withContext(
+    (context) => async (userId: string, resourceId: string) => {
+      const res = await sfProxy<Mutation["profileCreate"]>({
+        context,
+        endpoint,
+        splitter: {
+          path: "socialProfileCreate",
+          remoteFieldName: "profileCreate",
+          operationName: "ProfileCreate",
+        },
+      });
 
-    return res;
-  });
+      return res;
+    }
+  );
 
   static socialProfileUpdate = withContext(
     (context) => async (values: ProfileUpdateDataInput) => {

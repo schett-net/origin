@@ -29,6 +29,9 @@ export default defineService(
       socialPost: SocialController.socialPost,
       allSocialPost: SocialController.allSocialPost,
       allSocialPostTrending: SocialController.allSocialPostTrending,
+
+      mailpressTemplate: Mailpress.template,
+      mailpressAllTemplate: Mailpress.allTemplate,
     },
     Mutation: {
       passwordReset: UserController.passwordReset,
@@ -59,6 +62,9 @@ export default defineService(
       shopifyProductUpdate: Shopify.productUpdate,
       shopifyProductDelete: Shopify.productDelete,
       mailpressMailSchedule: Mailpress.mailSchedule,
+      mailpressTemplateCreate: Mailpress.templateCreate,
+      mailpressTemplateUpdate: Mailpress.templateUpdate,
+      mailpressTemplateDelete: Mailpress.templateDelete,
 
       // socialProfileCreate: SocialController.socialProfileCreate,
       socialProfileUpdate: SocialController.socialProfileUpdate,

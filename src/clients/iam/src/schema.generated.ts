@@ -99,13 +99,13 @@ export type GenericObjectInput = {
 
 export class Query {
     __typename: t.String;
-    user: (args?: {
+    user: (args: {
+        resourceId: t.String;
         id?: t.String;
-        resourceId?: t.String;
         login?: t.String;
     }) => User;
-    allUser: (args?: {
-        resourceId?: t.String;
+    allUser: (args: {
+        resourceId: t.String;
         filter?: FilterInput;
     }) => User[];
     emailLookup: (args: {
@@ -165,8 +165,10 @@ export class Email {
     isPrimary: t.Boolean;
     isVerified: t.Boolean;
     userId: t.Nullable<t.String>;
+    createdAt: t.Date;
+    updatedAt: t.Date;
     config: t.Nullable<EmailConfig>;
-    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.isVerified = false; this.userId = null; this.config = proxy(EmailConfig); }
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.isVerified = false; this.userId = null; this.createdAt = ""; this.updatedAt = ""; this.config = proxy(EmailConfig); }
 }
 export class EmailConfig {
     __typename: t.String;
@@ -262,8 +264,8 @@ export class UserTokenPayload {
     sub: t.String;
     scope: t.NotSupportedYet;
     roles: t.String[];
-    iat: t.NotSupportedYet;
-    exp: t.NotSupportedYet;
+    iat: t.Nullable<t.Number>;
+    exp: t.Nullable<t.Number>;
     jti: t.String;
     aud: t.String;
     constructor() { this.__typename = ""; this.type = null; this.sub = ""; this.scope = null; this.roles = []; this.iat = null; this.exp = null; this.jti = ""; this.aud = ""; }
@@ -345,12 +347,12 @@ export class Mutation {
         resourceId?: t.String;
     }) => Deploy[];
     passwordReset: (args: {
-        emailAddress: t.String;
         resourceId: t.String;
+        emailAddress: t.String;
     }) => t.String;
     passwordResetConfirm: (args: {
-        emailAddress: t.String;
         resourceId: t.String;
+        emailAddress: t.String;
         password: t.String;
         otp: t.String;
     }) => t.String;

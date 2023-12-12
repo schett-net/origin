@@ -2,11 +2,20 @@ import { ServiceError } from "@snek-at/function";
 import { GraphQLError, GraphQLErrorExtensions } from "graphql";
 
 export class SfProxyError extends ServiceError {
-  constructor(message: string) {
-    super(message, {
-      code: "SF_PROXY_ERROR",
-      statusCode: 500,
-      message: "An error occurred while proxying the request",
+  constructor(
+    originalError: any,
+    proxy: {
+      query: string;
+      splitQuery: string | null;
+      variables: any;
+    }
+  ) {
+    super(originalError.message, {
+      code: originalError.extensions?.code,
+      statusCode: originalError.extensions?.statusCode,
+      message: originalError.message,
+      // @ts-ignore
+      proxy: proxy,
     });
   }
 }

@@ -3,10 +3,15 @@ import { Query, Mutation, TokenPair as _TokenPair } from "./schema.generated";
 
 type TokenPair = Pick<_TokenPair, "accessToken" | "refreshToken">;
 
+const apiURL =
+  process.env.GATSBY_ORIGIN_API_URL ||
+  process.env.ORIGIN_API_URL ||
+  "https://services.snek.at/graphql";
+
 export const sq = makeSnekQuery(
   { Query, Mutation },
   {
-    apiURL: "https://services.snek.at/graphql",
+    apiURL,
     middlewares: [
       ({ context }) => {
         const tokenPair = getTokenPair();

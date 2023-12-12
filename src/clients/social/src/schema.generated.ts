@@ -24,15 +24,8 @@ export enum PrivacyInput {
     FRIENDS = "FRIENDS"
 }
 
-export type FiltersInput_1_2_3_4_5_6 = {
+export type FiltersInput_1_2_3_4_5_6_7 = {
     userId?: t.String;
-};
-export type FiltersInput_1_2 = {
-    query?: t.String;
-    from?: t.Date;
-    to?: t.Date;
-    language?: LanguageInput;
-    orderBy?: MOST_RECENT_MOST_STARREDInput;
 };
 export type FiltersInput_1_2_3 = {
     query?: t.String;
@@ -42,16 +35,26 @@ export type FiltersInput_1_2_3 = {
     orderBy?: MOST_RECENT_MOST_STARREDInput;
 };
 export type FiltersInput_1_2_3_4 = {
-    userId?: t.String;
+    query?: t.String;
     from?: t.Date;
     to?: t.Date;
+    language?: LanguageInput;
+    orderBy?: MOST_RECENT_MOST_STARREDInput;
 };
 export type FiltersInput_1_2_3_4_5 = {
     userId?: t.String;
     from?: t.Date;
     to?: t.Date;
 };
+export type FiltersInput_1_2_3_4_5_6 = {
+    userId?: t.String;
+    from?: t.Date;
+    to?: t.Date;
+};
 export type FiltersInput = {
+    ids?: t.String[];
+};
+export type FiltersInput_1 = {
     userId?: t.String;
     privacy?: PrivacyInput;
     language?: LanguageInput;
@@ -59,7 +62,7 @@ export type FiltersInput = {
     from?: t.Date;
     to?: t.Date;
 };
-export type FiltersInput_1 = {
+export type FiltersInput_1_2 = {
     userId?: t.String;
     language?: LanguageInput;
 };
@@ -86,29 +89,45 @@ export type PostUpdateDataInput = {
 
 export class Query {
     __typename: t.String;
-    profile: (userId: t.String) => Profile;
-    allProfile: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number) => Connection;
-    post: (postId?: t.String, slug?: t.String) => Post;
-    allPost: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput) => Connection_1;
-    allPostTrending: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1) => Connection_1;
+    profile: (resourceId: t.String, userId: t.String) => Profile;
+    allProfile: (resourceId: t.String, after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput) => Connection;
+    post: (resourceId: t.String, postId?: t.String, slug?: t.String) => Post;
+    allPost: (resourceId: t.String, after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1) => Connection_1;
+    allPostTrending: (resourceId: t.String, after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2) => Connection_1;
     version: t.String;
     constructor() { this.__typename = ""; this.profile = fnProxy(Profile); this.allProfile = fnProxy(Connection); this.post = fnProxy(Post); this.allPost = fnProxy(Connection_1); this.allPostTrending = fnProxy(Connection_1); this.version = ""; }
 }
 export class Profile {
     __typename: t.String;
     id: t.String;
+    resourceId: t.String;
     bio: t.Nullable<t.String>;
     createdAt: t.Date;
     updatedAt: t.Date;
     language: t.Nullable<Language>;
+    user: t.Nullable<User>;
     posts: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number) => Connection_1;
-    starredPosts: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2) => Connection_1_2;
-    stars: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3) => Connection_1_2_3;
-    followers: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4) => Connection_1_2_3_4;
-    following: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4_5) => Connection_1_2_3_4_5;
+    starredPosts: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3) => Connection_1_2;
+    stars: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4) => Connection_1_2_3;
+    followers: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4_5) => Connection_1_2_3_4;
+    following: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4_5_6) => Connection_1_2_3_4_5;
     activity: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number) => Connection_1_2_3_4_5_6;
     views: t.Number;
-    constructor() { this.__typename = ""; this.id = ""; this.bio = null; this.createdAt = ""; this.updatedAt = ""; this.language = null; this.posts = fnProxy(Connection_1); this.starredPosts = fnProxy(Connection_1_2); this.stars = fnProxy(Connection_1_2_3); this.followers = fnProxy(Connection_1_2_3_4); this.following = fnProxy(Connection_1_2_3_4_5); this.activity = fnProxy(Connection_1_2_3_4_5_6); this.views = null; }
+    constructor() { this.__typename = ""; this.id = ""; this.resourceId = ""; this.bio = null; this.createdAt = ""; this.updatedAt = ""; this.language = null; this.user = proxy(User); this.posts = fnProxy(Connection_1); this.starredPosts = fnProxy(Connection_1_2); this.stars = fnProxy(Connection_1_2_3); this.followers = fnProxy(Connection_1_2_3_4); this.following = fnProxy(Connection_1_2_3_4_5); this.activity = fnProxy(Connection_1_2_3_4_5_6); this.views = null; }
+}
+export class User {
+    __typename: t.String;
+    details: t.Nullable<Details>;
+    username: t.String;
+    primaryEmailAddress: t.String;
+    constructor() { this.__typename = ""; this.details = proxy(Details); this.username = ""; this.primaryEmailAddress = ""; }
+}
+export class Details {
+    __typename: t.String;
+    firstName: t.Nullable<t.String>;
+    lastName: t.Nullable<t.String>;
+    avatarURL: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; this.avatarURL = null; }
 }
 export class Connection_1 {
     __typename: t.String;
@@ -133,7 +152,7 @@ export class Post {
     language: t.Nullable<Language>;
     matchingQuery: t.Nullable<t.String>;
     profile: t.Nullable<Profile>;
-    stars: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4_5_6) => Connection_1_2_3_4_5_6_7;
+    stars: (after?: t.String, before?: t.String, first?: t.Number, last?: t.Number, filters?: FiltersInput_1_2_3_4_5_6_7) => Connection_1_2_3_4_5_6_7;
     views: t.Number;
     constructor() { this.__typename = ""; this.id = ""; this.slug = ""; this.title = ""; this.avatarURL = null; this.summary = null; this.content = null; this.profileId = ""; this.createdAt = ""; this.updatedAt = ""; this.privacy = null; this.language = null; this.matchingQuery = null; this.profile = proxy(Profile); this.stars = fnProxy(Connection_1_2_3_4_5_6_7); this.views = null; }
 }
@@ -301,9 +320,9 @@ export class Edge_1_2_3_4_5_6_7 {
 }
 export class Mutation {
     __typename: t.String;
-    profileCreate: Profile;
-    profileUpdate: (values: ProfileUpdateDataInput) => Profile;
-    profileDelete: t.Boolean;
+    profileCreate: (userId: t.String, resourceId: t.String) => Profile;
+    profileUpdate: (resourceId: t.String, userId: t.String, values: ProfileUpdateDataInput) => Profile;
+    profileDelete: (resourceId: t.String, userId: t.String) => t.Boolean;
     profileFollow: (userId: t.String) => ProfileFollow;
     profileUnfollow: (userId: t.String) => ProfileFollow;
     postCreate: (values: PostDataInput) => Post;
@@ -311,7 +330,7 @@ export class Mutation {
     postDelete: (postId: t.String) => t.Boolean;
     postStar: (postId: t.String) => PostStar;
     postUnstar: (postId: t.String) => PostStar;
-    constructor() { this.__typename = ""; this.profileCreate = proxy(Profile); this.profileUpdate = fnProxy(Profile); this.profileDelete = false; this.profileFollow = fnProxy(ProfileFollow); this.profileUnfollow = fnProxy(ProfileFollow); this.postCreate = fnProxy(Post); this.postUpdate = fnProxy(Post); this.postDelete = () => false; this.postStar = fnProxy(PostStar); this.postUnstar = fnProxy(PostStar); }
+    constructor() { this.__typename = ""; this.profileCreate = fnProxy(Profile); this.profileUpdate = fnProxy(Profile); this.profileDelete = () => false; this.profileFollow = fnProxy(ProfileFollow); this.profileUnfollow = fnProxy(ProfileFollow); this.postCreate = fnProxy(Post); this.postUpdate = fnProxy(Post); this.postDelete = () => false; this.postStar = fnProxy(PostStar); this.postUnstar = fnProxy(PostStar); }
 }
 export class ProfileFollow {
     __typename: t.String;

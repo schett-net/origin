@@ -266,7 +266,7 @@ export const sfProxy = async <T>(args: {
       return null as T;
     }
 
-    throw new SfProxyError(err.message);
+    throw new SfProxyError(err, { query, variables, splitQuery: null });
   }
 
   logger.info(
@@ -318,7 +318,11 @@ export const sfProxy = async <T>(args: {
       return null as T;
     }
 
-    throw new SfProxyError(errors[0].message);
+    throw new SfProxyError(errors[0], {
+      query,
+      splitQuery,
+      variables,
+    });
   }
 
   const firstPath =

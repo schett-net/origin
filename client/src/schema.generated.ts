@@ -14,6 +14,11 @@ export enum Privacy {
     PRIVATE = "PRIVATE",
     FRIENDS = "FRIENDS"
 }
+export enum EmailAddressType {
+    EMAIL_ADDRESS = "EMAIL_ADDRESS",
+    EMAIL_ID = "EMAIL_ID",
+    USER_ID = "USER_ID"
+}
 export enum LanguageInputInput {
     EN = "EN",
     DE = "DE"
@@ -50,15 +55,8 @@ export type ArgsInput_1_2 = {
 export type ArgsInput_1 = {
     id: t.String;
 };
-export type FiltersInput_1_2_3_4_5_6Input = {
+export type FiltersInput_1_2_3_4_5_6_7Input = {
     userId?: t.String;
-};
-export type FiltersInput_1_2Input = {
-    query?: t.String;
-    from?: t.String;
-    to?: t.String;
-    language?: LanguageInputInput;
-    orderBy?: MOST_RECENT_MOST_STARREDInputInput;
 };
 export type FiltersInput_1_2_3Input = {
     query?: t.String;
@@ -68,26 +66,34 @@ export type FiltersInput_1_2_3Input = {
     orderBy?: MOST_RECENT_MOST_STARREDInputInput;
 };
 export type FiltersInput_1_2_3_4Input = {
-    userId?: t.String;
+    query?: t.String;
     from?: t.String;
     to?: t.String;
+    language?: LanguageInputInput;
+    orderBy?: MOST_RECENT_MOST_STARREDInputInput;
 };
 export type FiltersInput_1_2_3_4_5Input = {
     userId?: t.String;
     from?: t.String;
     to?: t.String;
 };
-export type FiltersInputInput = {
+export type FiltersInput_1_2_3_4_5_6Input = {
+    userId?: t.String;
+    from?: t.String;
+    to?: t.String;
+};
+export type FilterInputInput = {
+    ids?: t.String[];
+    isActive?: t.Boolean;
+    isAdmin?: t.Boolean;
+};
+export type FiltersInput_1Input = {
     userId?: t.String;
     privacy?: PrivacyInputInput;
     language?: LanguageInputInput;
     query?: t.String;
     from?: t.String;
     to?: t.String;
-};
-export type FiltersInput_1Input = {
-    userId?: t.String;
-    language?: LanguageInputInput;
 };
 export type ValuesInputInput = {
     emailAddress: t.String;
@@ -193,19 +199,103 @@ export type VariantsInput_1 = {
 export type InventoryItemInput_1 = {
     tracked?: t.Boolean;
 };
-export type EmailEnvelopeInputInput = {
-    from?: EmailAddressInputInput;
-    to?: EmailAddressInputInput[];
+export type EnvelopeInputInput = {
     subject?: t.String;
-    replyTo?: EmailAddressInputInput;
+    to?: ToInput_1_2Input[];
+    from?: FromInput_1_2Input;
+    replyTo?: ReplyToInput_1_2Input;
 };
-export type EmailAddressInputInput = {
+export type ToInput_1_2Input = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type FromInput_1_2Input = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type ReplyToInput_1_2Input = {
     value: t.String;
     type: EmailAddressTypeInputInput;
 };
 export type TemplateInputInput = {
     id: t.String;
     values: t.NotSupportedYet;
+};
+export type DataInputInput = {
+    content: t.String;
+    description: t.String;
+    authorizationUser?: AuthorizationUserInputInput;
+    variables?: VariablesInputInput[];
+    envelope?: EnvelopeInput_1Input;
+};
+export type AuthorizationUserInputInput = {
+    userId: t.String;
+    authorization: t.String;
+};
+export type VariablesInputInput = {
+    name: t.String;
+    isRequired?: t.Boolean;
+    isConstant?: t.Boolean;
+    description?: t.String;
+    defaultValue?: t.String;
+};
+export type EnvelopeInput_1Input = {
+    subject?: t.String;
+    to?: ToInputInput[];
+    from?: FromInputInput;
+    replyTo?: ReplyToInputInput;
+};
+export type ToInputInput = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type FromInputInput = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type ReplyToInputInput = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type DataInput_1Input = {
+    content?: t.String;
+    description?: t.String;
+    transformer?: t.String;
+    authorizationUser?: AuthorizationUserInput_1Input;
+    envelope?: EnvelopeInput_1_2Input;
+    parentId?: t.String;
+    linkedIds?: t.String[];
+    variables?: VariablesInput_1Input[];
+};
+export type AuthorizationUserInput_1Input = {
+    userId: t.String;
+    authorization: t.String;
+};
+export type EnvelopeInput_1_2Input = {
+    subject?: t.String;
+    to?: ToInput_1Input[];
+    from?: FromInput_1Input;
+    replyTo?: ReplyToInput_1Input;
+};
+export type ToInput_1Input = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type FromInput_1Input = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type ReplyToInput_1Input = {
+    value: t.String;
+    type: EmailAddressTypeInputInput;
+};
+export type VariablesInput_1Input = {
+    id?: t.String;
+    name: t.String;
+    isRequired?: t.Boolean;
+    isConstant?: t.Boolean;
+    description?: t.String;
+    defaultValue?: t.String;
 };
 export type ProfileUpdateDataInputInput = {
     language?: LanguageInputInput;
@@ -230,13 +320,14 @@ export type PostUpdateDataInputInput = {
 
 export class Query {
     __typename: t.String;
-    user: (args?: {
+    user: (args: {
+        resourceId: t.String;
         id?: t.String;
-        resourceId?: t.String;
         login?: t.String;
     }) => ObjectAndUser;
     allUser: (args: {
         resourceId: t.String;
+        filter?: FilterInputInput;
     }) => User[];
     userMe: User;
     resource: (args: {
@@ -245,26 +336,33 @@ export class Query {
     shopifyAllProductId: (args: {
         resourceId: t.String;
     }) => t.String[];
-    socialPost: (args?: {
+    socialPost: (args: {
+        resourceId: t.String;
         postId?: t.String;
         slug?: t.String;
     }) => Post;
-    allSocialPost: (args?: {
-        after?: t.String;
-        before?: t.String;
-        first?: t.Number;
-        last?: t.Number;
-        filters?: FiltersInputInput;
-    }) => Connection_1;
-    allSocialPostTrending: (args?: {
+    allSocialPost: (args: {
+        resourceId: t.String;
         after?: t.String;
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
         filters?: FiltersInput_1Input;
     }) => Connection_1;
+    allSocialPostTrending: (args: {
+        resourceId: t.String;
+        after?: t.String;
+        before?: t.String;
+        first?: t.Number;
+        last?: t.Number;
+        filters?: FiltersInput_1Input;
+    }) => Connection_1;
+    mailpressTemplate: (args: {
+        id: t.String;
+    }) => EmailTemplate;
+    mailpressAllTemplate: EmailTemplate[];
     version: t.String;
-    constructor() { this.__typename = ""; this.user = fnProxy(ObjectAndUser); this.allUser = fnArrayProxy(User); this.userMe = proxy(User); this.resource = fnProxy(Resource); this.shopifyAllProductId = () => []; this.socialPost = fnProxy(Post); this.allSocialPost = fnProxy(Connection_1); this.allSocialPostTrending = fnProxy(Connection_1); this.version = ""; }
+    constructor() { this.__typename = ""; this.user = fnProxy(ObjectAndUser); this.allUser = fnArrayProxy(User); this.userMe = proxy(User); this.resource = fnProxy(Resource); this.shopifyAllProductId = () => []; this.socialPost = fnProxy(Post); this.allSocialPost = fnProxy(Connection_1); this.allSocialPostTrending = fnProxy(Connection_1); this.mailpressTemplate = fnProxy(EmailTemplate); this.mailpressAllTemplate = arrayProxy(EmailTemplate); this.version = ""; }
 }
 export class ObjectAndUser {
     __typename: t.String;
@@ -310,8 +408,10 @@ export class Email {
     isPrimary: t.Boolean;
     isVerified: t.Boolean;
     userId: t.Nullable<t.String>;
+    createdAt: t.String;
+    updatedAt: t.String;
     config: t.Nullable<EmailConfig>;
-    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.isVerified = false; this.userId = null; this.config = proxy(EmailConfig); }
+    constructor() { this.__typename = ""; this.id = ""; this.emailAddress = ""; this.resourceId = ""; this.isPrimary = false; this.isVerified = false; this.userId = null; this.createdAt = ""; this.updatedAt = ""; this.config = proxy(EmailConfig); }
 }
 export class EmailConfig {
     __typename: t.String;
@@ -422,10 +522,12 @@ export class Details {
 export class Profile {
     __typename: t.String;
     id: t.String;
+    resourceId: t.String;
     bio: t.Nullable<t.String>;
     createdAt: t.String;
     updatedAt: t.String;
     language: t.Nullable<Language>;
+    user: t.Nullable<User_1>;
     posts: (args?: {
         after?: t.String;
         before?: t.String;
@@ -437,28 +539,28 @@ export class Profile {
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
-        filters?: FiltersInput_1_2Input;
+        filters?: FiltersInput_1_2_3Input;
     }) => Connection_1_2;
     stars: (args?: {
         after?: t.String;
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
-        filters?: FiltersInput_1_2_3Input;
+        filters?: FiltersInput_1_2_3_4Input;
     }) => Connection_1_2_3;
     followers: (args?: {
         after?: t.String;
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
-        filters?: FiltersInput_1_2_3_4Input;
+        filters?: FiltersInput_1_2_3_4_5Input;
     }) => Connection_1_2_3_4;
     following: (args?: {
         after?: t.String;
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
-        filters?: FiltersInput_1_2_3_4_5Input;
+        filters?: FiltersInput_1_2_3_4_5_6Input;
     }) => Connection_1_2_3_4_5;
     activity: (args?: {
         after?: t.String;
@@ -467,7 +569,21 @@ export class Profile {
         last?: t.Number;
     }) => Connection_1_2_3_4_5_6;
     views: t.Number;
-    constructor() { this.__typename = ""; this.id = ""; this.bio = null; this.createdAt = ""; this.updatedAt = ""; this.language = null; this.posts = fnProxy(Connection_1); this.starredPosts = fnProxy(Connection_1_2); this.stars = fnProxy(Connection_1_2_3); this.followers = fnProxy(Connection_1_2_3_4); this.following = fnProxy(Connection_1_2_3_4_5); this.activity = fnProxy(Connection_1_2_3_4_5_6); this.views = null; }
+    constructor() { this.__typename = ""; this.id = ""; this.resourceId = ""; this.bio = null; this.createdAt = ""; this.updatedAt = ""; this.language = null; this.user = proxy(User_1); this.posts = fnProxy(Connection_1); this.starredPosts = fnProxy(Connection_1_2); this.stars = fnProxy(Connection_1_2_3); this.followers = fnProxy(Connection_1_2_3_4); this.following = fnProxy(Connection_1_2_3_4_5); this.activity = fnProxy(Connection_1_2_3_4_5_6); this.views = null; }
+}
+export class User_1 {
+    __typename: t.String;
+    details: t.Nullable<Details_1>;
+    username: t.String;
+    primaryEmailAddress: t.String;
+    constructor() { this.__typename = ""; this.details = proxy(Details_1); this.username = ""; this.primaryEmailAddress = ""; }
+}
+export class Details_1 {
+    __typename: t.String;
+    firstName: t.Nullable<t.String>;
+    lastName: t.Nullable<t.String>;
+    avatarURL: t.Nullable<t.String>;
+    constructor() { this.__typename = ""; this.firstName = null; this.lastName = null; this.avatarURL = null; }
 }
 export class Connection_1 {
     __typename: t.String;
@@ -497,7 +613,7 @@ export class Post {
         before?: t.String;
         first?: t.Number;
         last?: t.Number;
-        filters?: FiltersInput_1_2_3_4_5_6Input;
+        filters?: FiltersInput_1_2_3_4_5_6_7Input;
     }) => Connection_1_2_3_4_5_6_7;
     views: t.Number;
     constructor() { this.__typename = ""; this.id = ""; this.slug = ""; this.title = ""; this.avatarURL = null; this.summary = null; this.content = null; this.profileId = ""; this.createdAt = ""; this.updatedAt = ""; this.privacy = null; this.language = null; this.matchingQuery = null; this.profile = proxy(Profile); this.stars = fnProxy(Connection_1_2_3_4_5_6_7); this.views = null; }
@@ -666,6 +782,63 @@ export class Secret {
     value: t.NotSupportedYet;
     constructor() { this.__typename = ""; this.name = ""; this.value = null; }
 }
+export class EmailTemplate {
+    __typename: t.String;
+    id: t.String;
+    description: t.String;
+    content: t.String;
+    verifyReplyTo: t.Nullable<t.Boolean>;
+    transformer: t.Nullable<t.String>;
+    authorizationUser: t.Nullable<AuthorizationUser>;
+    envelope: t.Nullable<EmailEnvelope>;
+    parent: t.Nullable<EmailTemplate>;
+    linked: EmailTemplate[];
+    variables: VariableDefinition[];
+    createdBy: t.String;
+    resourceId: t.String;
+    createdAt: t.String;
+    updatedAt: t.String;
+    constructor() { this.__typename = ""; this.id = ""; this.description = ""; this.content = ""; this.verifyReplyTo = null; this.transformer = null; this.authorizationUser = proxy(AuthorizationUser); this.envelope = proxy(EmailEnvelope); this.parent = proxy(EmailTemplate); this.linked = arrayProxy(EmailTemplate); this.variables = arrayProxy(VariableDefinition); this.createdBy = ""; this.resourceId = ""; this.createdAt = ""; this.updatedAt = ""; }
+}
+export class AuthorizationUser {
+    __typename: t.String;
+    id: t.String;
+    userId: t.String;
+    authorization: t.String;
+    EmailTemplate: EmailTemplate[];
+    constructor() { this.__typename = ""; this.id = ""; this.userId = ""; this.authorization = ""; this.EmailTemplate = arrayProxy(EmailTemplate); }
+}
+export class EmailEnvelope {
+    __typename: t.String;
+    id: t.String;
+    subject: t.Nullable<t.String>;
+    EmailTemplate: EmailTemplate[];
+    from: t.Nullable<EmailAddress>;
+    replyTo: t.Nullable<EmailAddress>;
+    to: EmailAddress[];
+    constructor() { this.__typename = ""; this.id = ""; this.subject = null; this.EmailTemplate = arrayProxy(EmailTemplate); this.from = proxy(EmailAddress); this.replyTo = proxy(EmailAddress); this.to = arrayProxy(EmailAddress); }
+}
+export class EmailAddress {
+    __typename: t.String;
+    id: t.String;
+    value: t.String;
+    type: t.Nullable<EmailAddressType>;
+    ToEnvelopes: EmailEnvelope[];
+    FromEnvelopes: EmailEnvelope[];
+    ReplyToEnvelopes: EmailEnvelope[];
+    constructor() { this.__typename = ""; this.id = ""; this.value = ""; this.type = null; this.ToEnvelopes = arrayProxy(EmailEnvelope); this.FromEnvelopes = arrayProxy(EmailEnvelope); this.ReplyToEnvelopes = arrayProxy(EmailEnvelope); }
+}
+export class VariableDefinition {
+    __typename: t.String;
+    id: t.String;
+    name: t.String;
+    description: t.Nullable<t.String>;
+    defaultValue: t.Nullable<t.String>;
+    isRequired: t.Nullable<t.Boolean>;
+    isConstant: t.Nullable<t.Boolean>;
+    EmailTemplate: t.Nullable<EmailTemplate>;
+    constructor() { this.__typename = ""; this.id = ""; this.name = ""; this.description = null; this.defaultValue = null; this.isRequired = null; this.isConstant = null; this.EmailTemplate = proxy(EmailTemplate); }
+}
 export class Mutation {
     __typename: t.String;
     passwordReset: (args: {
@@ -756,11 +929,21 @@ export class Mutation {
         id: t.String;
     }) => t.String;
     mailpressMailSchedule: (args: {
-        envelope: EmailEnvelopeInputInput;
+        envelope: EnvelopeInputInput;
         body?: t.String;
         bodyHTML?: t.String;
         template?: TemplateInputInput;
     }) => t.String;
+    mailpressTemplateCreate: (args: {
+        data: DataInputInput;
+    }) => EmailTemplate;
+    mailpressTemplateUpdate: (args: {
+        id: t.String;
+        data: DataInput_1Input;
+    }) => EmailTemplate;
+    mailpressTemplateDelete: (args: {
+        id: t.String;
+    }) => EmailTemplate;
     socialProfileUpdate: (args: {
         values: ProfileUpdateDataInputInput;
     }) => Profile;
@@ -786,7 +969,7 @@ export class Mutation {
     socialPostUnstar: (args: {
         postId: t.String;
     }) => PostStar;
-    constructor() { this.__typename = ""; this.passwordReset = () => false; this.passwordResetConfirm = () => false; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userRegister = fnProxy(User); this.userCreate = fnProxy(UserCreate); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailConfirm = fnProxy(UserEmailConfirm); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.userTokenCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; this.socialProfileUpdate = fnProxy(Profile); this.socialProfileFollow = fnProxy(ProfileFollow); this.socialProfileUnfollow = fnProxy(ProfileFollow); this.socialPostCreate = fnProxy(Post); this.socialPostUpdate = fnProxy(Post); this.socialPostDelete = () => false; this.socialPostStar = fnProxy(PostStar); this.socialPostUnstar = fnProxy(PostStar); }
+    constructor() { this.__typename = ""; this.passwordReset = () => false; this.passwordResetConfirm = () => false; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userRegister = fnProxy(User); this.userCreate = fnProxy(UserCreate); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailConfirm = fnProxy(UserEmailConfirm); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.userTokenCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; this.mailpressTemplateCreate = fnProxy(EmailTemplate); this.mailpressTemplateUpdate = fnProxy(EmailTemplate); this.mailpressTemplateDelete = fnProxy(EmailTemplate); this.socialProfileUpdate = fnProxy(Profile); this.socialProfileFollow = fnProxy(ProfileFollow); this.socialProfileUnfollow = fnProxy(ProfileFollow); this.socialPostCreate = fnProxy(Post); this.socialPostUpdate = fnProxy(Post); this.socialPostDelete = () => false; this.socialPostStar = fnProxy(PostStar); this.socialPostUnstar = fnProxy(PostStar); }
 }
 export class UserSignIn {
     __typename: t.String;

@@ -7,6 +7,7 @@ import { TokenPair } from "@snek-functions/jwt/dist/schema.generated";
 import { asEnumKey } from "snek-query";
 import { sqIAM } from "../clients/iam/src";
 import {
+  FilterInput,
   Query as IAMQuery,
   Mutation,
   OAuthCredentialInput,
@@ -39,8 +40,8 @@ export class UserController {
   static user = withContext(
     (context) =>
       async (
+        resourceId: string,
         id?: string,
-        resourceId?: string,
         login?: string
       ): Promise<
         ReturnType<IAMQuery["user"]> & {
@@ -73,6 +74,10 @@ export class UserController {
             operationName: "UserProfile",
             path: "user.profile",
             args: {
+              resourceId: {
+                kind: "StringValue",
+                value: resourceId,
+              },
               userId: {
                 kind: "StringValue",
                 value: user.id,
@@ -95,19 +100,49 @@ export class UserController {
     }
   );
 
-  static allUser = withContext((context) => async (resourceId: string) => {
-    const users = await sfProxy<ReturnType<IAMQuery["allUser"]>>({
-      context,
-      endpoint: UserController.endpoint,
-      splitter: {
-        operationName: "AllUser",
-        path: "allUser",
-        excludePaths: [],
-      },
-    });
+  static allUser = withContext(
+    (context) => async (resourceId: string, filter?: FilterInput) => {
+      const users = await sfProxy<ReturnType<IAMQuery["allUser"]>>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "AllUser",
+          path: "allUser",
+          excludePaths: [],
+        },
+      });
 
-    return users;
-  });
+      // const profiles = await sfProxy<ReturnType<SocialQuery["allProfile"]>>({
+      //   context,
+      //   endpoint: SocialController.endpoint,
+      //   splitter: {
+      //     operationName: "AllProfile",
+      //     path: "allProfile",
+      //     args: {
+      //       resourceId: {
+      //         kind: "StringValue",
+      //         value: resourceId,
+      //       },
+      //       filters: {
+      //         kind: "FiltersInput",
+      //         value: {
+      //           kind: "StringArrayValue",
+      //           value: users.map((u) => u.id),
+      //         },
+      //       } as any,
+      //     },
+      //     excludePaths: [],
+      //   },
+      // });
+
+      // const data = users.map((u) => ({
+      //   ...u,
+      //   profile: profiles.nodes.find((p) => p.id === u.id),
+      // }));
+
+      return users;
+    }
+  );
 
   static userUpdate = withContext(
     (context) => async (id: string, values: UserUpdateValues) => {
@@ -142,6 +177,7 @@ export class UserController {
   static userMe = withContext(
     (context) => async () => {
       const userId = context.multiAuth[0].userId;
+      const resourceId = context.multiAuth[0].resourceId;
 
       const user = await sfProxy<ReturnType<IAMQuery["user"]>>({
         context,
@@ -155,6 +191,10 @@ export class UserController {
             id: {
               kind: "StringValue",
               value: userId,
+            },
+            resourceId: {
+              kind: "StringValue",
+              value: resourceId,
             },
           },
         },
@@ -174,7 +214,7 @@ export class UserController {
         values: RegisterInput["values"],
         skipEmailVerification?: RegisterInput["skipEmailVerification"]
       ) => {
-        return sfProxy<ReturnType<Mutation["userCreate"]>>({
+        return await sfProxy<ReturnType<Mutation["userCreate"]>>({
           context,
           endpoint: UserController.endpoint,
           splitter: {
@@ -211,7 +251,7 @@ export class UserController {
         let profile: ReturnType<SocialQuery["profile"]> | null = null;
 
         if (createProfile) {
-          profile = await sfProxy<SocialMutation["profileCreate"]>({
+          profile = await sfProxy<ReturnType<SocialMutation["profileCreate"]>>({
             context,
             endpoint: SocialController.endpoint,
             splitter: {
@@ -221,14 +261,14 @@ export class UserController {
               remoteFieldName: "profileCreate",
               excludePaths: [],
               args: {
-                resourceId: null,
+                userId: {
+                  kind: "StringValue",
+                  value: user.id,
+                },
                 values: null,
                 skipEmailVerification: null,
                 createProfile: null,
               },
-            },
-            headers: {
-              "x-forwarded-user": user.id,
             },
           });
         }
@@ -242,7 +282,7 @@ export class UserController {
 
   static userCreateConfirm = withContext(
     (context) => async (userId: string, otp: string) => {
-      return sfProxy<ReturnType<Mutation["userCreateConfirm"]>>({
+      return await sfProxy<ReturnType<Mutation["userCreateConfirm"]>>({
         context,
         endpoint: UserController.endpoint,
         splitter: {
@@ -282,7 +322,7 @@ export class UserController {
         // Get user to determine permissions
         const [auth, userErrors] = await sqIAM.query(
           (Query) => {
-            const u = Query.user({ id: userId });
+            const u = Query.user({ resourceId, id: userId });
 
             return {
               isAdmin: u.isAdmin,
@@ -337,6 +377,10 @@ export class UserController {
                     kind: "StringValue",
                     value: userId,
                   },
+                  resourceId: {
+                    kind: "StringValue",
+                    value: resourceId,
+                  },
                 },
               },
             })),
@@ -348,6 +392,10 @@ export class UserController {
                 operationName: "UserProfile",
                 path: "userSignIn.user.profile",
                 args: {
+                  resourceId: {
+                    kind: "StringValue",
+                    value: resourceId,
+                  },
                   userId: {
                     kind: "StringValue",
                     value: userId,
@@ -439,6 +487,7 @@ export class UserController {
       const auth = await requireAnyAuth(context, []);
 
       const userId = auth.multiAuth[0].userId;
+      const resourceId = auth.multiAuth[0].resourceId;
 
       const me = await sfProxy<ReturnType<IAMQuery["user"]>>({
         context,
@@ -453,6 +502,10 @@ export class UserController {
             id: {
               kind: "StringValue",
               value: userId,
+            },
+            resourceId: {
+              kind: "StringValue",
+              value: resourceId,
             },
             refreshToken: null,
             accessToken: null,
@@ -564,7 +617,7 @@ export class UserController {
 
   static userTokenCreate = withContext(
     (context) => async (userId: string, name: string) => {
-      return sfProxy<ReturnType<Mutation["userTokenCreate"]>>({
+      return await sfProxy<ReturnType<Mutation["userTokenCreate"]>>({
         context,
         endpoint: UserController.endpoint,
         splitter: {
