@@ -1,5 +1,5 @@
 import { ServiceError, bindWithContext, withContext } from "@snek-at/function";
-import { requireAnyAuth, requireUserAuth } from "@snek-functions/jwt";
+import { requireAnyAuth, requireAdminForResource } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
@@ -164,7 +164,12 @@ export class UserController {
 
   static userDelete = withContext(
     (context) => async (id: string) => {
-      const resourceId = context.multiAuth[0].resourceId;
+      const { resourceId, userId } = context.multiAuth[0];
+
+      if (userId !== id) {
+        // Check if user has permission to delete other users (is admin)
+        await requireAdminForResource(context, [resourceId]);
+      }
 
       const res = await fetch(socialAPIUrl, {
         method: "POST",
