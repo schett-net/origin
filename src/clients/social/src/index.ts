@@ -3,7 +3,7 @@ import { Query, Mutation } from "./schema.generated.js";
 
 const serviceName = "social";
 
-const apiURL =
+export const apiURL =
   process.env.NODE_ENV === "production"
     ? `http://${serviceName}:3000/graphql`
     : `https://services.snek.at/${serviceName}/graphql`;

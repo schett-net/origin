@@ -1,11 +1,13 @@
 import { ServiceError, bindWithContext, withContext } from "@snek-at/function";
-import { requireAnyAuth } from "@snek-functions/jwt";
+import { requireAnyAuth, requireUserAuth } from "@snek-functions/jwt";
 import { GraphQLError } from "graphql";
 import { sqAuthentication } from "../clients/authentication/src";
 
 import { TokenPair } from "@snek-functions/jwt/dist/schema.generated";
 import { asEnumKey } from "snek-query";
 import { sqIAM } from "../clients/iam/src";
+import { sq as sqSocial, apiURL as socialAPIUrl } from "../clients/social/src";
+
 import {
   FilterInput,
   Query as IAMQuery,
@@ -160,19 +162,52 @@ export class UserController {
     }
   );
 
-  static userDelete = withContext((context) => async (id: string) => {
-    const user = await sfProxy<ReturnType<Mutation["userDelete"]>>({
-      context,
-      endpoint: UserController.endpoint,
-      splitter: {
-        operationName: "UserDelete",
-        path: "userDelete",
-        excludePaths: [],
-      },
-    });
+  static userDelete = withContext(
+    (context) => async (id: string) => {
+      const resourceId = context.multiAuth[0].resourceId;
 
-    return user;
-  });
+      const res = await fetch(socialAPIUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: context.req.headers.authorization!,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation {
+              profileDelete(resourceId: "${resourceId}", userId: "${id}")
+            }
+          `,
+        }),
+      });
+
+      const { data, errors } = await res.json();
+
+      console.error("Errors while deleting profile", data, errors);
+
+      const [_2, iamErrors] = await sqIAM.mutate(
+        (Mutation) => Mutation.userDelete({ id }),
+        {
+          headers: {
+            Authorization: context.req.headers.authorization,
+          },
+        }
+      );
+
+      if (iamErrors) {
+        throw new GraphQLError(iamErrors[0].message, {
+          extensions: iamErrors[0].extensions,
+        });
+      }
+
+      console.error("Errors while deleting user", iamErrors);
+
+      return true;
+    },
+    {
+      decorators: [requireAnyAuth],
+    }
+  );
 
   static userMe = withContext(
     (context) => async () => {
@@ -629,6 +664,23 @@ export class UserController {
     },
     {
       decorators: [],
+    }
+  );
+
+  static userExportData = withContext(
+    (context) => async () => {
+      return await sfProxy<Mutation["userExportData"]>({
+        context,
+        endpoint: UserController.endpoint,
+        splitter: {
+          operationName: "UserExportData",
+          path: "userExportData",
+          excludePaths: [],
+        },
+      });
+    },
+    {
+      decorators: [requireAnyAuth],
     }
   );
 }

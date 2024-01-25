@@ -34,6 +34,8 @@ export default defineService(
       mailpressAllTemplate: Mailpress.allTemplate,
     },
     Mutation: {
+      userExportData: UserController.userExportData,
+
       passwordReset: UserController.passwordReset,
       passwordResetConfirm: UserController.passwordResetConfirm,
 
@@ -66,9 +68,7 @@ export default defineService(
       mailpressTemplateUpdate: Mailpress.templateUpdate,
       mailpressTemplateDelete: Mailpress.templateDelete,
 
-      // socialProfileCreate: SocialController.socialProfileCreate,
       socialProfileUpdate: SocialController.socialProfileUpdate,
-      // socialProfileDelete: SocialController.socialProfileDelete,
 
       socialProfileFollow: SocialController.socialProfileFollow,
       socialProfileUnfollow: SocialController.socialProfileUnfollow,

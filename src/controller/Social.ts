@@ -10,6 +10,7 @@ import {
   Query,
 } from "../clients/social/src/schema.generated";
 import { sfProxy } from "../utils/snek-function-proxy";
+import { requireAnyAuth } from "@snek-functions/jwt";
 
 const endpoint = {
   development: "https://services.snek.at/social/graphql",
@@ -83,24 +84,10 @@ export class SocialController {
       }
   );
 
-  static socialProfileCreate = withContext(
-    (context) => async (userId: string, resourceId: string) => {
-      const res = await sfProxy<Mutation["profileCreate"]>({
-        context,
-        endpoint,
-        splitter: {
-          path: "socialProfileCreate",
-          remoteFieldName: "profileCreate",
-          operationName: "ProfileCreate",
-        },
-      });
-
-      return res;
-    }
-  );
-
   static socialProfileUpdate = withContext(
-    (context) => async (values: ProfileUpdateDataInput) => {
+    (context) => async (resourceId: string, values: ProfileUpdateDataInput) => {
+      const user = context.multiAuth[0];
+
       const res = await sfProxy<ReturnType<Mutation["profileUpdate"]>>({
         context,
         endpoint,
@@ -108,26 +95,21 @@ export class SocialController {
           path: "socialProfileUpdate",
           remoteFieldName: "profileUpdate",
           operationName: "ProfileUpdate",
+          args: {
+            userId: {
+              kind: "StringValue",
+              value: user.userId,
+            },
+          },
         },
       });
 
       return res;
+    },
+    {
+      decorators: [requireAnyAuth],
     }
   );
-
-  static socialProfileDelete = withContext((context) => async () => {
-    const res = await sfProxy<Mutation["profileDelete"]>({
-      context,
-      endpoint,
-      splitter: {
-        path: "socialProfileDelete",
-        remoteFieldName: "profileDelete",
-        operationName: "ProfileDelete",
-      },
-    });
-
-    return res;
-  });
 
   static socialProfileFollow = withContext(
     (context) => async (userId: string) => {

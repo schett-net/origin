@@ -99,8 +99,8 @@ export type GenericObjectInput = {
 
 export class Query {
     __typename: t.String;
-    user: (args: {
-        resourceId: t.String;
+    user: (args?: {
+        resourceId?: t.String;
         id?: t.String;
         login?: t.String;
     }) => User;
@@ -356,7 +356,8 @@ export class Mutation {
         password: t.String;
         otp: t.String;
     }) => t.String;
-    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(User); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userRoleAdd = () => false; this.userRoleRemove = () => false; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailConfirm = fnProxy(Email); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.userExternalCredentialCreate = fnProxy(ExternalCredential); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); this.passwordReset = () => ""; this.passwordResetConfirm = () => ""; }
+    userExportData: t.Boolean;
+    constructor() { this.__typename = ""; this.resourceCreate = fnProxy(Resource); this.userCreate = fnProxy(User); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userRoleAdd = () => false; this.userRoleRemove = () => false; this.userTokenCreate = () => ""; this.userTokenDelete = () => false; this.userEmailCreate = fnProxy(Email); this.userEmailConfirm = fnProxy(Email); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailDelete = () => false; this.userEmailUpdate = fnProxy(Email); this.userExternalCredentialCreate = fnProxy(ExternalCredential); this.secretCreate = fnProxy(SecretObject); this.genericObjectCreate = fnProxy(GenericObject); this.deployAuthentication = fnArrayProxy(Deploy); this.passwordReset = () => ""; this.passwordResetConfirm = () => ""; this.userExportData = false; }
 }
 export class Deploy {
     __typename: t.String;

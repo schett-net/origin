@@ -841,6 +841,7 @@ export class VariableDefinition {
 }
 export class Mutation {
     __typename: t.String;
+    userExportData: t.Boolean;
     passwordReset: (args: {
         emailAddress: t.String;
         resourceId: t.String;
@@ -945,6 +946,7 @@ export class Mutation {
         id: t.String;
     }) => EmailTemplate;
     socialProfileUpdate: (args: {
+        resourceId: t.String;
         values: ProfileUpdateDataInputInput;
     }) => Profile;
     socialProfileFollow: (args: {
@@ -969,7 +971,7 @@ export class Mutation {
     socialPostUnstar: (args: {
         postId: t.String;
     }) => PostStar;
-    constructor() { this.__typename = ""; this.passwordReset = () => false; this.passwordResetConfirm = () => false; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userRegister = fnProxy(User); this.userCreate = fnProxy(UserCreate); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailConfirm = fnProxy(UserEmailConfirm); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.userTokenCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; this.mailpressTemplateCreate = fnProxy(EmailTemplate); this.mailpressTemplateUpdate = fnProxy(EmailTemplate); this.mailpressTemplateDelete = fnProxy(EmailTemplate); this.socialProfileUpdate = fnProxy(Profile); this.socialProfileFollow = fnProxy(ProfileFollow); this.socialProfileUnfollow = fnProxy(ProfileFollow); this.socialPostCreate = fnProxy(Post); this.socialPostUpdate = fnProxy(Post); this.socialPostDelete = () => false; this.socialPostStar = fnProxy(PostStar); this.socialPostUnstar = fnProxy(PostStar); }
+    constructor() { this.__typename = ""; this.userExportData = false; this.passwordReset = () => false; this.passwordResetConfirm = () => false; this.userSignIn = fnProxy(UserSignIn); this.userSignOut = () => null; this.userRefresh = fnProxy(UserRefresh); this.userRegister = fnProxy(User); this.userCreate = fnProxy(UserCreate); this.userCreateConfirm = fnProxy(User); this.userUpdate = fnProxy(User); this.userDelete = () => false; this.userEmailCreate = fnProxy(UserEmail); this.userEmailConfirm = fnProxy(UserEmailConfirm); this.userEmailConfirmationResend = fnProxy(Email); this.userEmailUpdate = fnProxy(UserEmail); this.userEmailDelete = () => false; this.userExternalCredentialCreate = () => ""; this.userTokenCreate = () => ""; this.jaenPublish = () => ""; this.shopifyProductCreate = () => ""; this.shopifyProductUpdate = () => ""; this.shopifyProductDelete = () => ""; this.mailpressMailSchedule = () => ""; this.mailpressTemplateCreate = fnProxy(EmailTemplate); this.mailpressTemplateUpdate = fnProxy(EmailTemplate); this.mailpressTemplateDelete = fnProxy(EmailTemplate); this.socialProfileUpdate = fnProxy(Profile); this.socialProfileFollow = fnProxy(ProfileFollow); this.socialProfileUnfollow = fnProxy(ProfileFollow); this.socialPostCreate = fnProxy(Post); this.socialPostUpdate = fnProxy(Post); this.socialPostDelete = () => false; this.socialPostStar = fnProxy(PostStar); this.socialPostUnstar = fnProxy(PostStar); }
 }
 export class UserSignIn {
     __typename: t.String;
